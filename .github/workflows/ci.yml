@@ -46,6 +46,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: playwright-report, path: playwright-report, retention-days: 7 }
+      - name: Serve for evals
+        run: |
+          npm run seed
+          AI_STUB=1 EVAL_ENABLED=true EVAL_SECRET=e2e-eval npx next start -p 3300 &
+          npx --yes wait-on@8.0.1 http://localhost:3300 --timeout 60000
       - name: Evals (in-house harness, mock judge)
         uses: conraddavisjr/ai-evals/.github/actions/run-evals@main
         continue-on-error: true
