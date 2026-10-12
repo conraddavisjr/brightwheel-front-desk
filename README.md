@@ -4,7 +4,7 @@ An AI front desk for childcare centers.
 Families get instant answers from the center's own handbook, by text, voice or a guided flow, with the source cited every time.
 Directors keep the source of truth in the tools they already use, see what families ask, and close gaps in one click.
 
-**Live demo:** _link added at deploy_ · **Write-up:** [docs/WRITEUP.md](docs/WRITEUP.md) · **Design study:** [docs/design/DESIGN_STUDY.md](docs/design/DESIGN_STUDY.md)
+**Live demo:** https://front-desk-prototype.vercel.app · **Write-up:** [docs/WRITEUP.md](docs/WRITEUP.md) · **Design study:** [docs/design/DESIGN_STUDY.md](docs/design/DESIGN_STUDY.md)
 
 > Concept prototype by Conrad Davis Jr. for a brightwheel take-home.
 > Not an official brightwheel product.
