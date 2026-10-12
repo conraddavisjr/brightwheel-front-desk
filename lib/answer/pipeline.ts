@@ -142,7 +142,25 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
     /\b(open|opens|close|closes|closing|opening|what are your hours|hours of operation|business hours|what time do you|abren|cierran|horario)\b/i.test(question) &&
     !/\b(holiday|thanksgiving|christmas|break|closed (on|for)|closure)\b/i.test(question);
 
-  if (retrieval.strength === "none" && !isHours) {
+  if (isHours) {
+    // Opening hours are structured data the director owns: answered in code, instantly, never by a model.
+    const facts = hoursFacts(school.hours);
+    const cite = retrieval.passages.find((p) => /\b(hours|open|close[sd]?)\b/i.test(p.text) && /\d{1,2}(:\d{2})?\s?(am|pm)/i.test(p.text) && !/fever|vomit|sick|ill/i.test(p.text));
+    const card: AnswerCard = {
+      ...emptyCard(),
+      kind: "hours",
+      headline: facts[0] ? `We're open ${facts[0].label}, ${facts[0].value}.` : "Here are our hours.",
+      body: "Holidays and closures are on the school calendar. Ask \"When are you closed?\" to see the next ones.",
+      facts,
+      openNow: openNow(school.hours, school.timezone),
+      citations: cite ? [{ id: cite.id, documentId: cite.documentId, title: cite.title, heading: cite.heading.split(" > ").slice(1).join(" › ") || cite.title, excerpt: plain(cite.text).slice(0, 280), url: cite.url, sourceKind: cite.sourceKind, updatedAt: cite.updatedAt }] : [],
+      followUps: ["When are you closed next?", "What is the late pickup fee?", "How do I book a tour?"],
+    };
+    yield* finish(card, "structured_hours");
+    return;
+  }
+
+  if (retrieval.strength === "none") {
     yield* finish(await unsure(question, topic, input, school, null, persist), "no_match");
     return;
   }

@@ -185,7 +185,9 @@ export function extractiveAnswer(input: GenerateInput): ModelAnswer {
     .filter((cells) => cells.length >= 2)
     .slice(0, 8)
     .map((cells) => ({ label: cells[0], value: cells.slice(1).join(" · ") }));
-  const steps = list.slice(0, 6).map((l) => {
+  // Only list items that relate to the question; a long section's other lists are noise.
+  const relevantList = list.filter((l) => overlap(q, l) > 0);
+  const steps = (relevantList.length >= 2 ? relevantList : list.length <= 4 ? list : relevantList).slice(0, 6).map((l) => {
     const t = clean(l).replace(/^\d+[.)]\s*/, "");
     const [title, ...rest] = t.split(/:\s+/);
     return rest.length ? { title, detail: rest.join(": ") } : { title: t, detail: "" };
