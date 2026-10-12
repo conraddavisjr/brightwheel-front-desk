@@ -45,3 +45,8 @@ next-env.d.ts
 /playwright-report
 /supabase/.temp
 /supabase/.branches
+
+# Local tooling from the Supabase marketplace install
+/.agents
+skills-lock.json
+.env.vercel.*

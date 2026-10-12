@@ -1,0 +1,8 @@
+.env*
+.agents
+.claude
+test-results
+playwright-report
+docs/screenshots
+supabase/.temp
+scripts/*.mjs
