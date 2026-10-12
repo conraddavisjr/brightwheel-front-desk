@@ -139,7 +139,7 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
       <div role="tablist" aria-label="Privacy Guard sections" className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         {TABS.map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`min-h-10 shrink-0 rounded-full px-3.5 text-label font-semibold ring-1 transition ${tab === t ? "bg-ink text-surface ring-ink" : "bg-surface text-muted ring-line-soft hover:text-ink"}`}>
-            {labels[t]} <span className="tabular opacity-70">{counts[t]}</span>
+            {labels[t]} <span className="tabular">{counts[t]}</span>
           </button>
         ))}
       </div>
@@ -174,7 +174,7 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
                 <p className="mt-2.5 flex items-start gap-1.5 text-caption text-muted">
                   <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-ink" aria-hidden />
                   <span>
-                    {h.reason} <span className="opacity-70">({h.detector === "ai" ? "found by AI review" : "found by pattern"})</span>
+                    {h.reason} <span>({h.detector === "ai" ? "found by AI review" : "found by pattern"})</span>
                   </span>
                 </p>
                 <div className="mt-3.5 grid grid-cols-3 gap-2">
@@ -248,7 +248,7 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
                     {r.preset ? <Pill tone="neutral" dot={false}>Built in</Pill> : <Pill tone="accent" dot={false}>Yours</Pill>}
                   </p>
                   <p className="mt-0.5 text-caption text-muted">{r.description}</p>
-                  {r.basis ? <p className="mt-1 text-caption text-muted opacity-80">Why: {r.basis}</p> : null}
+                  {r.basis ? <p className="mt-1 text-caption text-muted">Why: {r.basis}</p> : null}
                 </div>
                 <button
                   type="button"

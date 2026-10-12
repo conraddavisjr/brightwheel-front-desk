@@ -1,0 +1,14 @@
+import { chromium, devices } from "@playwright/test";
+const [base, out] = process.argv.slice(2);
+const b = await chromium.launch();
+const ctx = await b.newContext({ ...devices["Pixel 7"] });
+const p = await ctx.newPage();
+p.on("pageerror", (e) => console.log("[pageerror]", e.message));
+await p.goto(base + "/");
+await p.request.post(base + "/api/demo/signin", { data: { school: "harbor-kids", role: "parent" } });
+await p.goto(base + "/ask");
+await p.getByRole("button", { name: /Can my child come in today/ }).click();
+await p.waitForTimeout(1200);
+await p.screenshot({ path: `${out}/sheet-phone.png` });
+console.log(await p.evaluate(() => { const d = document.querySelector('[role=dialog]'); return d ? [d.getBoundingClientRect().top, d.getBoundingClientRect().height, getComputedStyle(d).transform, d.innerHTML.length] : null; }));
+await b.close();

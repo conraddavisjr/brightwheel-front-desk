@@ -99,13 +99,14 @@ export function Sheet({
     window.addEventListener("pointerup", up);
   }
 
-  const useSnaps = !right && snapPoints && snapPoints.length > 0;
+  // Snap points only for read-only sheets: a snapped sheet is translated down, which would hide a footer's action.
+  const useSnaps = !right && !footer && snapPoints && snapPoints.length > 1;
   return (
     <Drawer.Root
       open={open}
       onOpenChange={onOpenChange}
       direction={right ? "right" : "bottom"}
-      {...(useSnaps ? { snapPoints, activeSnapPoint: snap, setActiveSnapPoint: setSnap } : {})}
+      {...((useSnaps ? { snapPoints, activeSnapPoint: snap, setActiveSnapPoint: setSnap, fadeFromIndex: 0 } : {}) as Record<string, never>)}
     >
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-40" />

@@ -38,7 +38,8 @@ async function InboxData({ searchParams }: { searchParams: PageProps<"/operator/
         ? ((conflictKeys ?? []).find((c) => c.id === g.id)?.normalized.split(" ").slice(1) ?? [])
             .map((id: string) => docMap.get(id))
             .filter(Boolean)
-            .map((d: { id: string; title: string; source_updated_at: string | null; status: string } | undefined) => ({ id: d!.id, title: d!.title, updatedAt: d!.source_updated_at, archived: d!.status === "archived" }))
+            .map((d: { id: string; title: string; source_updated_at: string | null; status: string } | undefined) => ({ id: d!.id, title: d!.title, updatedAt: d!.source_updated_at, archived: d!.status === "archived", outdated: /\b(old|outdated|archived?|superseded|previous|deprecated)\b|\b20(1\d|2[0-4])\b/i.test(d!.title) }))
+            .sort((a: { outdated: boolean }, b: { outdated: boolean }) => Number(b.outdated) - Number(a.outdated))
         : [],
   }));
   return <InboxView items={items} focusId={typeof focus === "string" ? focus : null} />;

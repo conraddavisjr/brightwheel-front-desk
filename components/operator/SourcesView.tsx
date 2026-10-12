@@ -323,7 +323,7 @@ function UploadZone({ onDone }: { onDone: () => void }) {
         <button type="button" onClick={() => input.current?.click()} disabled={!!busy} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-5 text-dense font-semibold text-on-accent hover:bg-accent-hover disabled:opacity-60">
           <CheckCircle2 className="h-4 w-4" aria-hidden /> Choose files
         </button>
-        <input ref={input} type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.md,.csv,application/pdf,image/*,text/*" className="sr-only" onChange={(e) => upload(e.target.files)} />
+        <input ref={input} aria-label="Upload files" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.md,.csv,application/pdf,image/*,text/*" className="sr-only" onChange={(e) => upload(e.target.files)} />
       </div>
     </section>
   );

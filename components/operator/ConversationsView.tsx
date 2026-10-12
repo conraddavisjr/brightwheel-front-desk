@@ -54,7 +54,7 @@ export function ConversationsView({ threads }: { threads: Thread[] }) {
             const n = f.id === "all" ? threads.length : threads.filter((t) => (f.id === "reply" ? t.needsReply : f.id === "down" ? t.feedback === -1 : t.outcome === "unsure")).length;
             return (
               <button key={f.id} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)} className={`min-h-10 shrink-0 rounded-full px-3.5 text-label font-semibold ring-1 transition ${filter === f.id ? "bg-ink text-surface ring-ink" : "bg-surface text-muted ring-line-soft hover:text-ink"}`}>
-                {f.label} <span className="tabular opacity-70">{n}</span>
+                {f.label} <span className="tabular">{n}</span>
               </button>
             );
           })}

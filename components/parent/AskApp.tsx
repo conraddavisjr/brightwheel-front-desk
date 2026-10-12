@@ -15,6 +15,7 @@ import { MessageStaffSheet } from "@/components/parent/MessageStaffSheet";
 import { SickCheckSheet } from "@/components/parent/SickCheckSheet";
 import { Avatar } from "@/components/ui/Avatar";
 import { WheelMark } from "@/components/brand/WheelMark";
+import { possessive } from "@/lib/text";
 
 export interface AskSchool {
   name: string;
@@ -274,7 +275,7 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-headline font-semibold text-ink">Can my child come in today?</span>
-                <span className="block text-dense text-muted">A 20-second check against {school.shortName}&apos;s illness policy</span>
+                <span className="block text-dense text-muted">A 20-second check against {possessive(school.shortName)} illness policy</span>
               </span>
               <ChevronRight className="h-5 w-5 text-muted" aria-hidden />
             </button>
@@ -334,7 +335,7 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
               onStop={() => abort.current?.abort()}
               placeholder={`Ask ${school.shortName} anything…`}
             />
-            <p className="mt-2 text-center text-[11px] text-muted">AI answers from {school.shortName}&apos;s documents. Staff can always help.</p>
+            <p className="mt-2 text-center text-[11px] text-muted">AI answers from {possessive(school.shortName)} documents. Staff can always help.</p>
           </div>
         </div>
       </div>

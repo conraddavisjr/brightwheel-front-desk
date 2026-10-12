@@ -88,7 +88,7 @@ export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId:
                         setMobileOpen(true);
                       }}
                       aria-current={selected === d.id ? "page" : undefined}
-                      className={`flex min-h-10 w-full items-center gap-2 rounded-[10px] px-2 text-left text-dense transition ${selected === d.id ? "bg-accent-tint font-semibold text-accent" : "text-ink hover:bg-sunken"} ${d.archived ? "opacity-50" : ""}`}
+                      className={`flex min-h-10 w-full items-center gap-2 rounded-[10px] px-2 text-left text-dense transition ${selected === d.id ? "bg-accent-tint font-semibold text-accent" : "text-ink hover:bg-sunken"} ${d.archived ? "text-muted line-through decoration-1" : ""}`}
                     >
                       <span className="w-5 shrink-0 text-center" aria-hidden>
                         {d.emoji ?? "📄"}

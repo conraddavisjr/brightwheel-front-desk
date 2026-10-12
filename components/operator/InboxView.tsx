@@ -25,7 +25,7 @@ export interface GapItem {
   answered_at: string | null;
   notified_at: string | null;
   askers: Array<{ id: string; name: string; hue: number }>;
-  documents: Array<{ id: string; title: string; updatedAt: string | null; archived: boolean }>;
+  documents: Array<{ id: string; title: string; updatedAt: string | null; archived: boolean; outdated?: boolean }>;
 }
 
 const TABS = [
@@ -52,7 +52,7 @@ export function InboxView({ items, focusId }: { items: GapItem[]; focusId: strin
             const n = items.filter((g) => g.status === t.id).length;
             return (
               <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`min-h-9 rounded-full px-3.5 text-label font-semibold transition ${tab === t.id ? "bg-accent text-on-accent" : "text-muted hover:text-ink"}`}>
-                {t.label} <span className="tabular opacity-80">{n}</span>
+                {t.label} <span className="tabular">{n}</span>
               </button>
             );
           })}
@@ -296,7 +296,10 @@ function GapSheet({ gap, onClose }: { gap: GapItem | null; onClose: () => void }
               <li key={d.id} className="flex items-center gap-3 rounded-[14px] bg-surface p-3.5 ring-1 ring-line-soft">
                 <FileText className="h-5 w-5 shrink-0 text-accent" aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-dense font-semibold text-ink">{d.title}</p>
+                  <p className="flex flex-wrap items-center gap-2 text-dense font-semibold text-ink">
+                    <span className="truncate">{d.title}</span>
+                    {d.outdated && !d.archived ? <Pill tone="orange">Looks outdated</Pill> : null}
+                  </p>
                   <p className="text-caption text-muted">{d.archived ? "Archived" : d.updatedAt ? `Updated ${new Date(d.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : "In use"}</p>
                 </div>
                 {d.archived ? (
