@@ -109,8 +109,8 @@ export function route(raw: string): Route {
 const TOPICS: Array<[string, RegExp]> = [
   ["illness", /\b(sick|ill|illness|fever|temperature|vomit\w*|diarrhea|throw(ing)? up|contagious|symptom\w*|pink ?eye|lice|rash|cough|covid|flu|strep|medicine|medication|meds)\b/i],
   ["tuition", /\b(tuition|cost|costs|price|fees?|rates?|pay|payment|bill\w*|autopay|discount|deposit|subsid\w*|financial aid)\b/i],
+  ["calendar", /\b(holiday\w*|closure\w*|break|calendar|day off|days off|in-service|snow day|closed (on|for)|thanksgiving|christmas|new year|labor day|memorial day|mlk|presidents)\b/i],
   ["hours", /\b(hours?|open|close[sd]?|closing|opening|early drop|late pick)\b/i],
-  ["calendar", /\b(holiday\w*|closure\w*|break|calendar|day off|days off|in-service|snow day|closed on)\b/i],
   ["events", /\b(event\w*|festival|picnic|party|concert|trip|picture day|photo day|conference\w*|potluck|graduation|halloween|costume)\b/i],
   ["meals", /\b(food|meals?|lunch\w*|snacks?|breakfast|menu|eat|nutrition|formula|milk|allerg\w*|nut)\b/i],
   ["enrollment", /\b(tour\w*|visit|enroll\w*|waitlist|wait list|apply|application|admission\w*|openings?|spots?|register|registration)\b/i],

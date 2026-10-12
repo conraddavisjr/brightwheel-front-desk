@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { db, must } from "@/lib/db/client";
+import { db, must, ok } from "@/lib/db/client";
 import { embedTexts, toPgVector } from "@/lib/ai/provider";
 import { chunkMarkdown } from "@/lib/retrieval/chunk";
 import { detect, mask, mergeFindings, suggestVisibility } from "@/lib/privacy/detect";
@@ -150,7 +150,7 @@ export async function ingestDocument(input: IngestInput, opts: { force?: boolean
       resolved_at: past?.resolved_at ?? null,
     };
   });
-  if (rows.length) must(await client.from("findings").upsert(rows, { onConflict: "document_id,span_start,span_end,category", ignoreDuplicates: true }), "insert findings");
+  if (rows.length) ok(await client.from("findings").upsert(rows, { onConflict: "document_id,span_start,span_end,category", ignoreDuplicates: true }), "insert findings");
 
   // 4. Family index.
   const chunkCount = await reindexDocument(documentId);
@@ -181,7 +181,7 @@ export async function reindexDocument(documentId: string): Promise<number> {
 
   // Embed the heading with the text: the heading path is often the best signal a passage has.
   const { vectors, model } = await embedTexts(chunks.map((c) => `${c.heading}\n${c.text}`), "document", await indexModel(doc.school_id));
-  must(
+  ok(
     await client.from("chunks").insert(
       chunks.map((c, i) => ({
         school_id: doc.school_id,

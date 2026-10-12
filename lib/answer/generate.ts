@@ -112,6 +112,10 @@ function overlap(a: Set<string>, text: string): number {
   return stubTokens(text).filter((t) => a.has(t)).length;
 }
 
+const GENERIC = new Set(
+  "kid child children son daughter too really off up drop pick open offer have need get go come know tell want like much many long time day today tomorrow week school center program class room teacher let any ok okay also still there here".split(" ").map((w) => w.replace(/(ing|ed|es|s)$/, "")),
+);
+
 const clean = (l: string) => l.replace(/^[-*]\s+/, "").replace(/\*\*/g, "").replace(/^#+\s*/, "").trim();
 
 /**
@@ -141,6 +145,15 @@ export function extractiveAnswer(input: GenerateInput): ModelAnswer {
 
   const top = r.passages.slice(0, 3);
   if (top.length === 0) return notFound(followUps);
+  // The question's own subject words ("summer", "camp") must appear, not just its topic ("enrollment").
+  const subject = [...q].filter((t) => !t.startsWith("#") && !t.includes("_") && !GENERIC.has(t));
+  const covered = (text: string) => {
+    const have = new Set(stubTokens(text));
+    // A word counts if the passage has it or its concept ("sick" is covered by a passage about illness).
+    return subject.filter((w) => have.has(w) || stubTokens(w).some((t) => t.startsWith("#") && have.has(t))).length;
+  };
+  const bestCover = Math.max(...top.map((p) => covered(`${p.heading} ${p.text}`)));
+  if (subject.length > 0 && bestCover < (subject.length <= 2 ? subject.length : Math.ceil(subject.length * 0.67))) return notFound(followUps);
   const scored = top.map((p) => ({ p, score: overlap(q, `${p.heading} ${p.text}`) })).sort((a, b) => b.score - a.score);
   const best = scored[0];
   const needed = Math.min(2, [...q].filter((t) => !t.includes("_")).length);
@@ -169,7 +182,10 @@ export function extractiveAnswer(input: GenerateInput): ModelAnswer {
   if (kind === "steps" && steps.length === 0) kind = "answer";
   if (kind === "menu" && facts.length === 0) kind = "answer";
 
-  const headline = rankedProse[0] ?? (facts[0] ? `${facts[0].label}: ${facts[0].value}` : clean(lines[0] ?? ""));
+  const leaf = best.p.heading.split(" > ").pop()?.replace(/^\d+[.)]\s*/, "") ?? "";
+  let headline = rankedProse[0] ?? (facts[0] ? `${facts[0].label}: ${facts[0].value}` : clean(lines[0] ?? ""));
+  // Never repeat a step as the headline; lead with what the section is instead.
+  if (steps.some((s) => headline.startsWith(s.title))) headline = rankedProse.find((l) => /:$/.test(l)) ?? (leaf ? `${leaf.replace(/[:.]$/, "")}:` : headline);
   const body = rankedProse.slice(1, 3).join(" ");
   const citations = scored.filter((s) => s.score >= needed).slice(0, 2).map((s) => s.p.id);
   return {

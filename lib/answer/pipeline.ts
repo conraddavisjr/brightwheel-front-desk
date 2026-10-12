@@ -1,3 +1,4 @@
+import { possessive } from "@/lib/text";
 import "server-only";
 import { db, must } from "@/lib/db/client";
 import { config } from "@/lib/config";
@@ -124,7 +125,7 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
     return;
   }
 
-  yield { type: "status", phase: "searching", label: looksSpanish(question) ? "Buscando en el manual…" : `Checking ${school.shortName}'s handbook…` };
+  yield { type: "status", phase: "searching", label: looksSpanish(question) ? "Buscando en el manual…" : `Checking ${possessive(school.shortName)} handbook…` };
   let retrieval: Retrieval;
   try {
     retrieval = await searchKnowledge(input.schoolId, question);
@@ -201,7 +202,7 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
 
   const card: AnswerCard = {
     outcome: "answered",
-    kind: events.length && (a.kind === "event" || a.kind === "answer") ? "event" : a.kind,
+    kind: events.length && !isHours ? "event" : a.kind,
     headline: a.headline.trim(),
     body: a.body.trim(),
     facts: a.facts.filter((f) => f.label && f.value).slice(0, 10),
@@ -223,10 +224,13 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
   };
 
   if (isHours || card.kind === "hours") {
+    // Opening hours come from the school's structured settings, which the director owns, not from prose.
     card.kind = "hours";
     card.openNow = openNow(school.hours, school.timezone);
-    if (card.facts.length === 0) card.facts = hoursFacts(school.hours);
-    if (!card.headline) card.headline = card.openNow.label;
+    card.facts = hoursFacts(school.hours);
+    const weekday = card.facts[0];
+    if (!a.headline || !/\d/.test(a.headline)) card.headline = weekday ? `We're open ${weekday.label}, ${weekday.value}.` : card.openNow.label;
+    card.steps = [];
   }
   if (r.conflict) {
     card.body = `${card.body} Heads up: two of the school's documents disagree on this, so we've asked the director to confirm.`.trim();
@@ -248,9 +252,9 @@ async function unsure(question: string, topic: string, input: AskInput, school: 
     ...emptyCard(),
     outcome: "unsure",
     kind: "contact",
-    headline: `I don't have that in ${school.shortName}'s information yet.`,
+    headline: `I don't have that in ${possessive(school.shortName)} information yet.`,
     body: "I've passed your question to the front desk so they can answer it and add it for other families. You'll get a reply in the brightwheel app.",
-    followUps: related ? [`Tell me about ${related.heading.split(" > ").pop()?.toLowerCase()}`] : ["What are your hours?", "What's coming up this month?"],
+    followUps: related ? [`Tell me about ${related.heading.split(" > ").pop()?.replace(/^\d+[.)]\s*/, "").toLowerCase()}`] : ["What are your hours?", "What's coming up this month?"],
     handoff: { reason: "Not in the school's information", phone: school.phone, email: school.email, gapLogged: logged },
   };
 }

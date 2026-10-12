@@ -1,3 +1,4 @@
+import { possessive } from "@/lib/text";
 import type { Route } from "@/lib/guard/router";
 import type { AnswerCard } from "@/lib/schemas";
 
@@ -48,7 +49,7 @@ export function routeCard(route: Exclude<Route, { action: "answer" }>, school: S
       outcome: "care",
       kind: "contact",
       headline: "You don't have to handle this alone.",
-      body: `If anyone is in immediate danger, call 911. For support right now, you can call or text 988 any time. ${school.shortName}'s director is also here to help, privately.`,
+      body: `If anyone is in immediate danger, call 911. For support right now, you can call or text 988 any time. ${possessive(school.shortName)} director is also here to help, privately.`,
       steps: [
         { title: "988 Suicide & Crisis Lifeline", detail: "Call or text 988, 24/7." },
         { title: "Childhelp National Child Abuse Hotline", detail: "1-800-422-4453, 24/7." },

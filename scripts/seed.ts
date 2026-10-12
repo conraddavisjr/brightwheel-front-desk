@@ -12,7 +12,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { join, basename, extname } from "node:path";
-import { db, must } from "@/lib/db/client";
+import { db, must, ok } from "@/lib/db/client";
 import { ingestDocument, schoolPrivacyContext } from "@/lib/ingest/ingest";
 import { csvToMarkdown, parseFrontmatter } from "@/lib/ingest/normalize";
 import { PRESET_RULES } from "@/lib/privacy/presets";
@@ -151,7 +151,7 @@ async function main() {
       "parents",
     ) as Array<{ id: string; name: string }>;
 
-    must(
+    ok(
       await client.from("privacy_rules").insert(PRESET_RULES.map((r) => ({ school_id: schoolId, category: r.category, name: r.name, description: r.description, pattern: null, preset: true, enabled: true }))),
       "rules",
     );
@@ -212,7 +212,7 @@ async function main() {
       "calendar source",
     );
     const toTs = (d: string, allDay: boolean) => (allDay ? zonedMidnight(d, cal.timeZone).toISOString() : new Date(d).toISOString());
-    must(
+    ok(
       await client.from("events").insert(
         cal.events.map((e) => ({
           school_id: schoolId,
@@ -291,9 +291,9 @@ async function seedHistory(schoolId: string, parents: Array<{ id: string; name: 
       }
     }
   }
-  for (let i = 0; i < convRows.length; i += 500) must(await client.from("conversations").insert(convRows.slice(i, i + 500)), "conversations");
-  for (let i = 0; i < msgRows.length; i += 500) must(await client.from("messages").insert(msgRows.slice(i, i + 500)), "messages");
-  must(
+  for (let i = 0; i < convRows.length; i += 500) ok(await client.from("conversations").insert(convRows.slice(i, i + 500)), "conversations");
+  for (let i = 0; i < msgRows.length; i += 500) ok(await client.from("messages").insert(msgRows.slice(i, i + 500)), "messages");
+  ok(
     await client.from("gaps").insert(
       [...gapCounts.entries()].map(([normalized, g]) => ({
         school_id: schoolId,

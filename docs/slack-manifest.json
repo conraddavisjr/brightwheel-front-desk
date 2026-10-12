@@ -1,0 +1,22 @@
+{
+  "display_information": {
+    "name": "Front Desk",
+    "description": "Questions families asked that the AI front desk could not answer, with a one-click Answer button.",
+    "background_color": "#5463D6"
+  },
+  "features": {
+    "bot_user": { "display_name": "Front Desk", "always_online": true }
+  },
+  "oauth_config": {
+    "scopes": { "bot": ["chat:write", "chat:write.public"] }
+  },
+  "settings": {
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://front-desk-prototype.vercel.app/api/slack/interact"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}

@@ -1,0 +1,153 @@
+"use client";
+
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Drawer } from "vaul";
+import { X } from "lucide-react";
+
+/**
+ * One overlay primitive for the whole app, built on Vaul:
+ * - phones: a bottom sheet with snap points; drag the handle to resize, flick down to close
+ * - wider screens (side="right"): a side drawer you can drag closed, resizable by its edge
+ * - Back (button or swipe gesture) closes the overlay instead of leaving the page
+ * - focus is trapped inside and returned to the trigger on close (Radix Dialog under Vaul)
+ */
+
+/** Push a history entry while open so the browser's Back closes the overlay first. */
+export function useBackToClose(open: boolean, close: () => void) {
+  const pushed = useRef(false);
+  const closeRef = useRef(close);
+  useEffect(() => {
+    closeRef.current = close;
+  }, [close]);
+  useEffect(() => {
+    if (!open) {
+      if (pushed.current) {
+        pushed.current = false;
+        if (window.history.state?.__sheet) window.history.back();
+      }
+      return;
+    }
+    window.history.pushState({ ...(window.history.state ?? {}), __sheet: true }, "");
+    pushed.current = true;
+    const onPop = () => {
+      if (pushed.current) {
+        pushed.current = false;
+        closeRef.current();
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [open]);
+}
+
+function useWide(minWidth = 768) {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${minWidth}px)`);
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [minWidth]);
+  return wide;
+}
+
+export function Sheet({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer,
+  side = "auto",
+  snapPoints,
+  width = 520,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  /** "auto": bottom sheet on phones, right drawer on md+. */
+  side?: "auto" | "bottom" | "right";
+  snapPoints?: (number | string)[];
+  width?: number;
+}) {
+  const wide = useWide();
+  const right = side === "right" || (side === "auto" && wide);
+  useBackToClose(open, () => onOpenChange(false));
+  const [panelWidth, setPanelWidth] = useState(width);
+  const [snap, setSnap] = useState<number | string | null>(snapPoints?.[0] ?? null);
+  useEffect(() => {
+    if (open) setSnap(snapPoints?.[0] ?? null);
+  }, [open, snapPoints]);
+
+  function startResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = panelWidth;
+    const move = (ev: PointerEvent) => setPanelWidth(Math.min(Math.max(startW + (startX - ev.clientX), 380), Math.min(window.innerWidth - 80, 960)));
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
+
+  const useSnaps = !right && snapPoints && snapPoints.length > 0;
+  return (
+    <Drawer.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      direction={right ? "right" : "bottom"}
+      {...(useSnaps ? { snapPoints, activeSnapPoint: snap, setActiveSnapPoint: setSnap } : {})}
+    >
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 z-40" />
+        <Drawer.Content
+          aria-describedby={description ? undefined : undefined}
+          className={
+            right
+              ? "fixed inset-y-2 right-2 z-50 flex flex-col overflow-hidden rounded-[24px] bg-raised shadow-3 outline-none ring-1 ring-line-soft"
+              : "fixed inset-x-0 bottom-0 z-50 flex max-h-[96dvh] flex-col rounded-t-[28px] bg-raised shadow-3 outline-none ring-1 ring-line-soft"
+          }
+          style={right ? { width: `min(${panelWidth}px, calc(100vw - 16px))` } : { height: useSnaps ? "96dvh" : undefined }}
+        >
+          {right ? (
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize panel"
+              tabIndex={0}
+              onPointerDown={startResize}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowLeft") setPanelWidth((w) => Math.min(w + 32, window.innerWidth - 80));
+                if (e.key === "ArrowRight") setPanelWidth((w) => Math.max(w - 32, 380));
+              }}
+              className="group absolute inset-y-0 left-0 z-10 w-3 cursor-col-resize"
+            >
+              <span className="absolute inset-y-1/2 left-1 h-10 w-1 -translate-y-1/2 rounded-full bg-line opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100" />
+            </div>
+          ) : (
+            <Drawer.Handle className="!mt-2.5 !mb-1 !h-1.5 !w-10 !bg-line" aria-label="Drag to resize or close" />
+          )}
+          <div className="flex items-start gap-3 px-5 pt-4 pb-3 sm:px-6">
+            <div className="min-w-0 flex-1">
+              <Drawer.Title className="text-title-2 font-bold text-ink">{title}</Drawer.Title>
+              {description ? <Drawer.Description className="mt-1 text-dense text-muted">{description}</Drawer.Description> : <Drawer.Description className="sr-only">Panel</Drawer.Description>}
+            </div>
+            <Drawer.Close aria-label="Close" className="-mr-2 -mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted transition hover:bg-sunken hover:text-ink">
+              <X className="h-5 w-5" aria-hidden />
+            </Drawer.Close>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">
+            {children}
+          </div>
+          {footer ? <div className="border-t border-line-soft bg-raised px-5 py-3 sm:px-6" style={{ paddingBottom: "max(12px, var(--safe-bottom))" }}>{footer}</div> : null}
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
