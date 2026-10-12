@@ -1,0 +1,10 @@
+/**
+ * Common given names, used only as context: a health or incident sentence
+ * becomes a private record when it names someone. A list is a blunt tool
+ * (it misses rare names), which is why the AI review layer exists; it is
+ * precise enough that policy text ("children with allergies") never trips it.
+ */
+const LIST = `
+aaliyah aaron abby abdul abigail ada adam adrian aiden aisha alex alexander alexis ali alice alicia amara amelia amir amy ana anaya andre andrea andrew angela anna annie anthony arjun arlo asher ashley aubrey audrey aurora ava avery axel ayaan bailey beatrice bella ben benjamin bianca blake brandon brayden brian brooke bruno caleb cameron camila carlos carmen caroline carter charlie charlotte chloe chris christian claire clara cole colin cooper daisy dakota damian daniel daniela danielle david dawn dean declan diana diego dylan eden eli elias elijah eliza elizabeth ella ellie emily emma eric erik esme ethan eva evan evelyn ezra fatima felix fiona finn freya gabriel gemma george gianna giulia grace gretchen hailey hana hannah harper harry hazel henry hudson hugo ian isaac isabel isabella isla ivan ivy jack jackson jacob jade james jamie jasmine jason jayden jenna jennifer jessica jillian joaquin joel john jonah jonas jordan jose joseph joshua josiah juan julia julian june kai kaia kayla kenji kevin kira kylie laila lana laura layla leah leila leo leon levi liam lily lina logan lola lorenzo lucas lucia lucy luis luka luna lydia mackenzie madison maeve malik marco marcus maria mariana marisol mark mason mateo matthew max maya mia micah michael mila miles milo mohammed mona morgan nadia naomi natalia nathan nia nico nina noah noor nora oliver olivia omar oscar owen paige parker paul penelope peter piper priya quinn rachel rafael raj ravi reed riley riya rohan rosa rose ruby ryan sadie samantha samir samuel sara sarah sasha scarlett sebastian selena sienna simon sofia sophia stella sydney tasha taylor theo theodore thomas tobias tyler valentina victor violet wesley william willow wyatt xavier yara yusuf zara zoe zoey
+`;
+export const FIRST_NAMES = new Set(LIST.trim().split(/\s+/));

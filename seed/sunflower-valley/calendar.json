@@ -1,0 +1,197 @@
+{
+  "calendar": "Sunflower Valley Early Learning",
+  "timeZone": "America/Los_Angeles",
+  "source": "Derived from the Notion Hours & Calendar and Parent Involvement & Events pages",
+  "events": [
+    {
+      "id": "svel-2026-labor-day",
+      "title": "Closed - Labor Day",
+      "start": "2026-09-07",
+      "end": "2026-09-08",
+      "allDay": true,
+      "location": "",
+      "description": "School closed for Labor Day.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-pd-day-oct",
+      "title": "Closed - Staff Professional Development Day",
+      "start": "2026-10-09",
+      "end": "2026-10-10",
+      "allDay": true,
+      "location": "",
+      "description": "School closed for staff training. No care available.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-picture-day",
+      "title": "Picture Day",
+      "start": "2026-10-20T08:30:00-07:00",
+      "end": "2026-10-20T12:00:00-07:00",
+      "allDay": false,
+      "location": "Sunflower Valley Early Learning, 4120 Linden Grove Avenue, Oakland, CA 94611",
+      "description": "Individual and class photos. Order forms will be sent through brightwheel. Siblings photos 8:30-9:00 AM.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-fall-picnic",
+      "title": "Fall Family Picnic",
+      "start": "2026-10-24T11:00:00-07:00",
+      "end": "2026-10-24T14:00:00-07:00",
+      "allDay": false,
+      "location": "Dimond Park, Oakland, CA",
+      "description": "Bring a nut-free picnic lunch and a blanket. We provide lemonade, water, and fruit. Bubbles, chalk, parachute game, and story circle at noon. Rain plan: school play yard and multipurpose room.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-costume-parade",
+      "title": "Costume Parade",
+      "start": "2026-10-30T10:00:00-07:00",
+      "end": "2026-10-30T10:45:00-07:00",
+      "allDay": false,
+      "location": "Sunflower Valley play yard",
+      "description": "Optional costumes, nothing scary please. Families welcome to watch from the yard fence.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-veterans-day",
+      "title": "Closed - Veterans Day",
+      "start": "2026-11-11",
+      "end": "2026-11-12",
+      "allDay": true,
+      "location": "",
+      "description": "School closed for Veterans Day.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-fall-conferences",
+      "title": "Fall Family Conferences",
+      "start": "2026-11-16",
+      "end": "2026-11-21",
+      "allDay": true,
+      "location": "School or video call",
+      "description": "20-minute conferences with your child's lead teacher. Sign up in brightwheel.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-thanksgiving-early",
+      "title": "Early Closure - 3:00 PM",
+      "start": "2026-11-25T15:00:00-08:00",
+      "end": "2026-11-25T18:00:00-08:00",
+      "allDay": false,
+      "location": "",
+      "description": "School closes at 3:00 PM the day before Thanksgiving.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-thanksgiving",
+      "title": "Closed - Thanksgiving Break",
+      "start": "2026-11-26",
+      "end": "2026-11-28",
+      "allDay": true,
+      "location": "",
+      "description": "School closed Thursday and Friday.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-winter-singalong",
+      "title": "Winter Sing-Along",
+      "start": "2026-12-17T16:30:00-08:00",
+      "end": "2026-12-17T17:30:00-08:00",
+      "allDay": false,
+      "location": "Blossoms room and play yard",
+      "description": "All classrooms sing together. Families welcome.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-winter-early",
+      "title": "Early Closure - 3:00 PM",
+      "start": "2026-12-23T15:00:00-08:00",
+      "end": "2026-12-23T18:00:00-08:00",
+      "allDay": false,
+      "location": "",
+      "description": "School closes at 3:00 PM before Winter Break.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2026-winter-break",
+      "title": "Closed - Winter Break",
+      "start": "2026-12-24",
+      "end": "2027-01-02",
+      "allDay": true,
+      "location": "",
+      "description": "School closed December 24 through January 1. Reopens Monday, January 4, 2027.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-mlk",
+      "title": "Closed - Martin Luther King Jr. Day",
+      "start": "2027-01-18",
+      "end": "2027-01-19",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-presidents",
+      "title": "Closed - Presidents' Day",
+      "start": "2027-02-15",
+      "end": "2027-02-16",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-pd-day-mar",
+      "title": "Closed - Staff Professional Development Day",
+      "start": "2027-03-12",
+      "end": "2027-03-13",
+      "allDay": true,
+      "location": "",
+      "description": "School closed for staff training.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-chavez",
+      "title": "Closed - Cesar Chavez Day",
+      "start": "2027-03-31",
+      "end": "2027-04-01",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-memorial",
+      "title": "Closed - Memorial Day",
+      "start": "2027-05-31",
+      "end": "2027-06-01",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-juneteenth",
+      "title": "Closed - Juneteenth (observed)",
+      "start": "2027-06-18",
+      "end": "2027-06-19",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "svel-2027-sunbeams-celebration",
+      "title": "Sunbeams Celebration (Pre-K Graduation)",
+      "start": "2027-08-13T16:00:00-07:00",
+      "end": "2027-08-13T17:00:00-07:00",
+      "allDay": false,
+      "location": "Sunflower Valley play yard",
+      "description": "Celebrating our Sunbeams heading to kindergarten. Light refreshments after.",
+      "visibility": "public"
+    }
+  ]
+}

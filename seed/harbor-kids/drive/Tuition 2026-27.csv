@@ -1,0 +1,15 @@
+Program,Classroom,Ages,Days per week,Schedule,Hours,Monthly rate (USD),Notes
+Toddler,Puffins,18 months - 3 years,5,Full day,7:30-5:30,2480,
+Toddler,Puffins,18 months - 3 years,3,Full day (M/W/F),7:30-5:30,1720,
+Toddler,Puffins,18 months - 3 years,2,Full day (T/Th),7:30-5:30,1240,New for 2026-27
+Primary,Orcas or Otters,3 - 6 years,5,Full day,7:30-5:30,2150,
+Primary,Orcas or Otters,3 - 6 years,5,Half day,8:30-12:30,1480,
+Primary,Orcas or Otters,3 - 6 years,3,Full day (M/W/F),7:30-5:30,1540,
+Kindergarten,Otters,5 - 6 years,5,Extended day + aftercare,7:30-5:30,2050,Must be 5 by Aug 31 2026
+Fee,All,,,,,,
+Application fee,All,,,,,100,One time; non-refundable
+Registration fee,All,,,,,200,Annual; non-refundable
+Supply fee,All,,,,,175,Billed each September
+Late payment fee,All,,,,,40,After the 5th of the month
+Late pickup fee,All,,,,,1,Per minute after 5:30 PM
+Sibling discount,All,,,,,,5% off older sibling tuition

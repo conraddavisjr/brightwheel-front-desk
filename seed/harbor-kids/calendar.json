@@ -1,0 +1,238 @@
+{
+  "calendar": "Harbor Kids Family Calendar",
+  "calendarId": "harborkids.family@group.calendar.example.com",
+  "timeZone": "America/Los_Angeles",
+  "source": "Google Calendar export",
+  "events": [
+    {
+      "id": "hk-20260907-labor-day",
+      "title": "CLOSED - Labor Day",
+      "start": "2026-09-07",
+      "end": "2026-09-08",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261009-inservice",
+      "title": "CLOSED - Teacher In-Service Day",
+      "start": "2026-10-09",
+      "end": "2026-10-10",
+      "allDay": true,
+      "location": "",
+      "description": "No school. Staff training day. Pumpkin patch permission slips due today (send via brightwheel).",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261016-pumpkin-patch",
+      "title": "Pumpkin Patch Field Trip (Orcas + Otters)",
+      "start": "2026-10-16T09:30:00-07:00",
+      "end": "2026-10-16T12:00:00-07:00",
+      "allDay": false,
+      "location": "Fairbanks Farm, Snohomish, WA",
+      "description": "Primary and kindergarten only (Puffins stay at school). Bus leaves 9:30 sharp, back by noon for lunch at school. Signed permission slip REQUIRED (due Oct 9). Rain boots + rain jacket. 4 parent chaperones needed - contact Priya.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261022-picture-day",
+      "title": "Picture Day",
+      "start": "2026-10-22T08:30:00-07:00",
+      "end": "2026-10-22T11:30:00-07:00",
+      "allDay": false,
+      "location": "Harbor Kids Montessori, 5418 Ballard Commons Way NW, Seattle, WA 98107",
+      "description": "Lumen Kids Photography. Order forms in brightwheel. Retakes Nov 19.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261030-harvest-festival",
+      "title": "Harvest Festival",
+      "start": "2026-10-30T16:00:00-07:00",
+      "end": "2026-10-30T18:00:00-07:00",
+      "allDay": false,
+      "location": "Harbor Kids play yard",
+      "description": "Apple cider, pumpkin decorating, music, potluck snacks (sign-up sheet in lobby). Costumes optional, nothing scary for the Puffins. Siblings and grandparents welcome.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261110-conferences",
+      "title": "Parent-Teacher Conferences",
+      "start": "2026-11-10",
+      "end": "2026-11-15",
+      "allDay": true,
+      "location": "Classrooms or video",
+      "description": "20-minute conferences with your child's guide. Sign up in brightwheel. School is open normal hours.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261114-conferences-saturday",
+      "title": "Saturday Conference Slots",
+      "start": "2026-11-14T09:00:00-08:00",
+      "end": "2026-11-14T12:00:00-08:00",
+      "allDay": false,
+      "location": "Harbor Kids Montessori",
+      "description": "Extra conference times for working families. Sign up in brightwheel. No child care during Saturday slots.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261111-veterans-day",
+      "title": "CLOSED - Veterans Day",
+      "start": "2026-11-11",
+      "end": "2026-11-12",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261119-picture-retakes",
+      "title": "Picture Retakes",
+      "start": "2026-11-19T08:30:00-08:00",
+      "end": "2026-11-19T10:00:00-08:00",
+      "allDay": false,
+      "location": "Harbor Kids Montessori",
+      "description": "Retakes and absent-day photos.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261126-thanksgiving",
+      "title": "CLOSED - Thanksgiving Break",
+      "start": "2026-11-26",
+      "end": "2026-11-28",
+      "allDay": true,
+      "location": "",
+      "description": "Closed Thursday and Friday.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20261221-winter-break",
+      "title": "CLOSED - Winter Break",
+      "start": "2026-12-21",
+      "end": "2027-01-02",
+      "allDay": true,
+      "location": "",
+      "description": "Closed Dec 21 - Jan 1. Jan 4 is a teacher in-service day (also closed). Children return Tuesday, Jan 5.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270104-inservice",
+      "title": "CLOSED - Teacher In-Service Day",
+      "start": "2027-01-04",
+      "end": "2027-01-05",
+      "allDay": true,
+      "location": "",
+      "description": "No school. Staff training day.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270118-mlk",
+      "title": "CLOSED - Martin Luther King Jr. Day",
+      "start": "2027-01-18",
+      "end": "2027-01-19",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270120-staff-reviews",
+      "title": "Staff: performance reviews",
+      "start": "2027-01-20T12:30:00-08:00",
+      "end": "2027-01-20T17:30:00-08:00",
+      "allDay": false,
+      "location": "Director's office",
+      "description": "STAFF ONLY. 30 min each. 12:30 Hana Sato (raise request - bring budget), 1:00 Jordan Kim (follow up on attendance warning from Oct), 1:30 Fatima Haddad, 2:00 Ben Okoro, 2:30 Ellie Brooks, 3:00 Priya Nair (discuss Otters lead role after Tomas leaves), 3:30 Sofia Marchetti.",
+      "visibility": "private"
+    },
+    {
+      "id": "hk-20270215-presidents-day",
+      "title": "CLOSED - Presidents Day",
+      "start": "2027-02-15",
+      "end": "2027-02-16",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270226-family-potluck",
+      "title": "Family Potluck",
+      "start": "2027-02-26T17:45:00-08:00",
+      "end": "2027-02-26T19:30:00-08:00",
+      "allDay": false,
+      "location": "Harbor Kids Montessori - Orcas and Otters rooms",
+      "description": "Bring a dish to share (label allergens, no peanuts please). Plates and drinks provided. Kids' art show in the hallway.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270312-inservice",
+      "title": "CLOSED - Teacher In-Service Day",
+      "start": "2027-03-12",
+      "end": "2027-03-13",
+      "allDay": true,
+      "location": "",
+      "description": "No school. Staff training day.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270405-spring-break",
+      "title": "CLOSED - Spring Break",
+      "start": "2027-04-05",
+      "end": "2027-04-10",
+      "allDay": true,
+      "location": "",
+      "description": "Closed Monday Apr 5 - Friday Apr 9. Reopen Monday Apr 12.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270514-spring-concert",
+      "title": "Spring Concert",
+      "start": "2027-05-14T16:30:00-07:00",
+      "end": "2027-05-14T17:30:00-07:00",
+      "allDay": false,
+      "location": "Harbor Kids play yard (rain: Ballard Commons Community Center gym)",
+      "description": "All classrooms perform. Families welcome. Puffins sing first (around 4:35) so they can head home early.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270517-spring-conferences",
+      "title": "Spring Parent-Teacher Conferences",
+      "start": "2027-05-17",
+      "end": "2027-05-22",
+      "allDay": true,
+      "location": "Classrooms or video",
+      "description": "Sign up in brightwheel.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270531-memorial-day",
+      "title": "CLOSED - Memorial Day",
+      "start": "2027-05-31",
+      "end": "2027-06-01",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270611-graduation",
+      "title": "Kindergarten Graduation",
+      "start": "2027-06-11T16:00:00-07:00",
+      "end": "2027-06-11T17:30:00-07:00",
+      "allDay": false,
+      "location": "Harbor Kids play yard (rain: Ballard Commons Community Center gym)",
+      "description": "Celebrating our Otters kindergarteners. All families welcome. Light refreshments after.",
+      "visibility": "public"
+    },
+    {
+      "id": "hk-20270618-juneteenth",
+      "title": "CLOSED - Juneteenth (observed)",
+      "start": "2027-06-18",
+      "end": "2027-06-19",
+      "allDay": true,
+      "location": "",
+      "description": "School closed.",
+      "visibility": "public"
+    }
+  ]
+}

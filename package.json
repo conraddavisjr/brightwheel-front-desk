@@ -6,21 +6,45 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed": "node --conditions=react-server --env-file=.env.local --import tsx scripts/seed.ts",
+    "db:reset": "supabase db reset",
+    "e2e": "playwright test"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.94",
+    "@notionhq/client": "^5.27.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
+    "ai": "^7.0.138",
+    "jose": "^6.2.12",
+    "lucide-react": "^1.55.0",
     "next": "16.4.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "unpdf": "^1.8.1",
+    "vaul": "^1.1.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "supabase": "^2.120.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -1,0 +1,11 @@
+employee_id,name,role,pay_type,hourly_rate,hours_sept_2026,gross_pay,ssn,date_of_birth,home_address,bank_name,routing_number,account_number,account_type
+HK-001,Gretchen Lindqvist,Director,salary,,,7083.33,523-48-1937,1979-04-22,"2217 NW 63rd St, Seattle, WA 98107",Puget Harbor Credit Union,325070760,4471029384,checking
+HK-002,Marcus Bell,Assistant Director / Lead Guide Orcas,hourly,34.50,168,5796.00,418-62-7305,1986-11-03,"7104 15th Ave NW Apt 3B, Seattle, WA 98117",Chase,021000021,739204118,checking
+HK-003,Tomas Ruiz,Lead Guide Otters,hourly,31.75,164,5207.00,287-35-9046,1990-02-17,"4823 Fremont Ave N, Seattle, WA 98103",Wells Fargo,121000248,6618402975,checking
+HK-004,Priya Nair,Kindergarten Guide Otters,hourly,30.25,160,4840.00,604-19-2283,1992-07-29,"918 NW 85th St, Seattle, WA 98117",Bank of America,125000024,000483920716,checking
+HK-005,Hana Sato,Lead Guide Puffins,hourly,29.00,168,4872.00,351-77-4620,1994-05-11,"6310 Phinney Ave N Unit 204, Seattle, WA 98103",U.S. Bank,125000105,153298047711,checking
+HK-006,Jordan Kim,Assistant Guide Puffins,hourly,24.50,152,3724.00,462-90-3158,1999-09-30,"1544 NW 56th St, Seattle, WA 98107",Chase,322271627,582019463,checking
+HK-007,Ellie Brooks,Floater,hourly,23.75,124,2945.00,539-24-6871,2001-12-08,"3021 NW Market St Apt 12, Seattle, WA 98107",BECU,325081403,9038471256,savings
+HK-008,Fatima Haddad,Assistant Guide Orcas,hourly,25.00,160,4000.00,213-56-8094,1997-03-25,"8812 Greenwood Ave N, Seattle, WA 98103",Bank of America,026009593,004829105533,checking
+HK-009,Ben Okoro,Assistant Guide Otters,hourly,24.75,156,3861.00,076-43-5512,1998-08-14,"2405 NW 70th St, Seattle, WA 98117",Wells Fargo,125008547,7294016638,checking
+HK-010,Sofia Marchetti,Aftercare (part time),hourly,22.25,64,1424.00,447-81-2069,2004-01-19,"5530 Leary Ave NW Apt 7, Seattle, WA 98107",BECU,325081403,9102758834,checking
