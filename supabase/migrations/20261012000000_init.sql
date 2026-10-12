@@ -75,6 +75,8 @@ create table documents (
   -- Why it has this visibility, and who decided ('auto' until a director changes it).
   visibility_reason text,
   visibility_set_by text not null default 'auto' check (visibility_set_by in ('auto', 'director')),
+  -- An automatic move to staff-only waits for one director confirmation in Privacy Guard.
+  visibility_reviewed boolean not null default false,
   -- Hash of the text the AI classifier last saw, so re-syncs of unchanged text cost nothing.
   classified_hash text,
   status text not null default 'active' check (status in ('active', 'archived')),

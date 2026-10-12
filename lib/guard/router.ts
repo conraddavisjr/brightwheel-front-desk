@@ -113,7 +113,7 @@ const TOPICS: Array<[string, RegExp]> = [
   ["hours", /\b(hours?|open|close[sd]?|closing|opening|early drop|late pick)\b/i],
   ["events", /\b(event\w*|festival|picnic|party|concert|trip|picture day|photo day|conference\w*|potluck|graduation|halloween|costume)\b/i],
   ["meals", /\b(food|meals?|lunch\w*|snacks?|breakfast|menu|eat|nutrition|formula|milk|allerg\w*|nut)\b/i],
-  ["enrollment", /\b(tour\w*|visit|enroll\w*|waitlist|wait list|apply|application|admission\w*|openings?|spots?|register|registration)\b/i],
+  ["enrollment", /\b(camp|summer program|after.?school|tour\w*|visit|enroll\w*|waitlist|wait list|apply|application|admission\w*|openings?|spots?|register|registration)\b/i],
   ["pickup", /\b(pick ?up|drop ?off|late|authorized|carpool|arriv\w*)\b/i],
   ["daily_care", /\b(nap\w*|sleep\w*|potty|toilet\w*|diaper\w*|routine|schedule|outdoor|outside|clothes|sunscreen|extra clothes)\b/i],
   ["policies", /\b(policy|policies|handbook|rules?|discipline|behavio\w*|biting|screen time|phones?)\b/i],

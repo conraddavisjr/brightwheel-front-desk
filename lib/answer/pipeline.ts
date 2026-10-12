@@ -1,4 +1,4 @@
-import { possessive } from "@/lib/text";
+import { plain, possessive } from "@/lib/text";
 import "server-only";
 import { db, must } from "@/lib/db/client";
 import { config } from "@/lib/config";
@@ -213,7 +213,7 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
       documentId: p.documentId,
       title: p.title,
       heading: p.heading.split(" > ").slice(1).join(" › ") || p.title,
-      excerpt: p.text.slice(0, 280),
+      excerpt: plain(p.text).slice(0, 280),
       url: p.url,
       sourceKind: p.sourceKind,
       updatedAt: p.updatedAt,

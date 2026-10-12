@@ -26,6 +26,8 @@ export interface DetectContext {
   allow?: string[];
   /** Custom rules a director added, with an optional regex or quoted phrases in the description. */
   rules?: Array<{ id: string; name: string; description: string; pattern: string | null; category: string; enabled: boolean }>;
+  /** Categories whose built-in rules a director turned off (every preset in the category disabled). */
+  disabledCategories?: string[];
 }
 
 type Hit = Omit<Finding, "excerpt"> & { excerpt?: string };
@@ -371,7 +373,9 @@ function ruleRegex(rule: NonNullable<DetectContext["rules"]>[number]): RegExp | 
 
 export function detect(text: string, ctx: DetectContext = {}): Finding[] {
   const hits: Hit[] = [];
+  const off = new Set(ctx.disabledCategories ?? []);
   for (const d of DETECTORS) {
+    if (off.has(d.category)) continue;
     d.re.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = d.re.exec(text))) {

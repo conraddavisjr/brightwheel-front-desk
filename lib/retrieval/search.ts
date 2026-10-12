@@ -149,7 +149,7 @@ function measures(text: string): Set<string> {
  * the director gets an Inbox item to fix the source.
  */
 export function findConflict(passages: Passage[]): Retrieval["conflict"] {
-  const top = passages.slice(0, 4);
+  const top = passages.slice(0, 8);
   for (let i = 0; i < top.length; i++) {
     for (let j = i + 1; j < top.length; j++) {
       const a = top[i];

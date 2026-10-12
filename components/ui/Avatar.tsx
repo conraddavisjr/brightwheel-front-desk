@@ -3,7 +3,7 @@ export function Avatar({ name, hue = 230, size = 36, className = "" }: { name: s
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
-    .slice(0, 2)
+    .slice(0, size < 30 ? 1 : 2)
     .map((w) => w[0]?.toUpperCase())
     .join("");
   return (

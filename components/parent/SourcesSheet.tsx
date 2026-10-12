@@ -24,7 +24,7 @@ export function SourcesSheet({ data, onClose }: { data: { citations: Citation[];
                 </p>
               </div>
             </div>
-            <blockquote className="mt-3 whitespace-pre-line border-l-2 border-accent/40 pl-3 text-dense text-ink">{c.excerpt.replace(/\|/g, " ").replace(/\s{2,}/g, " ").trim()}…</blockquote>
+            <blockquote className="mt-3 whitespace-pre-line border-l-2 border-accent/40 pl-3 text-dense text-ink">{c.excerpt}…</blockquote>
             {c.url && !c.url.includes("/demo/") ? (
               <a href={c.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-label font-semibold text-accent">
                 Open original <ExternalLink className="h-3.5 w-3.5" aria-hidden />

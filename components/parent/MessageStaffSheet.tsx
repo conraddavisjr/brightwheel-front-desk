@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 
@@ -8,12 +8,14 @@ import { Sheet } from "@/components/ui/Sheet";
 export function MessageStaffSheet({ open, about, conversationId, schoolName, onClose }: { open: boolean; about: string | null; conversationId: string | null; schoolName: string; onClose: () => void }) {
   const [text, setText] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setText(about ? `About my question "${about}": ` : "");
       setState("idle");
     }
-  }, [open, about]);
+  }
 
   async function send() {
     if (!text.trim()) return;

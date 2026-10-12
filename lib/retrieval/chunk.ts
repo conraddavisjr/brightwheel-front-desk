@@ -95,10 +95,39 @@ function splitBlock(block: string): string[] {
   return out;
 }
 
+/**
+ * Small sibling sections ("Keep your child home if: > Fever", "> Vomiting",
+ * "> Rash") are folded into their parent, each sub-heading kept as a bold
+ * lead-in. One chunk then answers "when do I keep my child home?" whole,
+ * instead of five fragments that each miss the rest of the rule.
+ */
+const SMALL_SECTION = 700;
+function foldSmallSiblings(list: Section[]): Section[] {
+  const out: Section[] = [];
+  for (const s of list) {
+    const size = s.blocks.join("\n").length;
+    const parent = s.path.slice(0, -1);
+    const prev = out[out.length - 1];
+    const prevSize = prev ? prev.blocks.join("\n").length : Infinity;
+    const sameParent = prev && parent.length >= 2 && (prev.path.join("\u0000") === parent.join("\u0000") || prev.path.slice(0, -1).join("\u0000") === parent.join("\u0000"));
+    if (prev && sameParent && size < SMALL_SECTION && prevSize + size < TARGET_CHARS) {
+      // Turn the previous section into the parent if it was a sibling, then append this one with its heading.
+      if (prev.path.length > parent.length) {
+        prev.blocks = [`**${prev.path[prev.path.length - 1]}:** ${prev.blocks[0]}`, ...prev.blocks.slice(1)];
+        prev.path = parent;
+      }
+      prev.blocks.push(`**${s.path[s.path.length - 1]}:** ${s.blocks[0]}`, ...s.blocks.slice(1));
+      continue;
+    }
+    out.push({ path: [...s.path], blocks: [...s.blocks] });
+  }
+  return out;
+}
+
 export function chunkMarkdown(markdown: string, title: string): Chunk[] {
   const chunks: Chunk[] = [];
-  for (const s of sections(markdown, title)) {
-    const heading = s.path.join(" > ");
+  for (const s of foldSmallSiblings(sections(markdown, title))) {
+    const heading = s.path.filter(Boolean).join(" > ");
     const pieces = s.blocks.flatMap(splitBlock);
     let cur: string[] = [];
     let len = 0;

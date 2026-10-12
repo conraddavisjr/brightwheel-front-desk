@@ -18,6 +18,7 @@ import { csvToMarkdown, parseFrontmatter } from "@/lib/ingest/normalize";
 import { PRESET_RULES } from "@/lib/privacy/presets";
 import { normalizeQuestion, topicOf } from "@/lib/guard/router";
 import { zonedMidnight } from "@/lib/time";
+import { searchKnowledge } from "@/lib/retrieval/search";
 
 const ROOT = join(process.cwd(), "seed");
 
@@ -247,6 +248,30 @@ async function seedHistory(schoolId: string, parents: Array<{ id: string; name: 
     for (const h of HISTORY) if ((x -= h.weight) <= 0) return h;
     return HISTORY[0];
   };
+  // Cite what the real search would cite, so "Most-used sources" reflects the school's actual documents.
+  const citeFor = new Map<string, Array<{ documentId: string; title: string; heading: string }>>();
+  for (const h of HISTORY.filter((x) => x.outcome === "answered")) {
+    const r = await searchKnowledge(schoolId, h.q, 3);
+    citeFor.set(h.q, r.passages.slice(0, 2).map((p) => ({ documentId: p.documentId, title: p.title, heading: p.heading })));
+  }
+  // Surface a real source conflict, found by the same detector parents trigger.
+  const conflict = (await searchKnowledge(schoolId, "When can my child come back after a fever? What temperature counts as a fever?", 6)).conflict;
+  if (conflict) {
+    ok(
+      await client.from("gaps").insert({
+        school_id: schoolId,
+        question: "Is my kid too sick to come in with a low fever?",
+        normalized: `conflict ${[conflict.a.documentId, conflict.b.documentId].sort().join(" ")}`,
+        topic: "illness",
+        kind: "conflict",
+        note: conflict.note,
+        ask_count: 9,
+        first_asked_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+        last_asked_at: new Date(Date.now() - 86400000).toISOString(),
+      }),
+      "conflict gap",
+    );
+  }
   const now = Date.now();
   const convRows: Array<Record<string, unknown>> = [];
   const msgRows: Array<Record<string, unknown>> = [];
@@ -268,7 +293,7 @@ async function seedHistory(schoolId: string, parents: Array<{ id: string; name: 
       at.setUTCHours(13 + Math.floor(r() * 11), Math.floor(r() * 60), 0, 0);
       const convId = crypto.randomUUID();
       convRows.push({ id: convId, school_id: schoolId, parent_id: parent.id, channel: r() < 0.18 ? "voice" : r() < 0.3 ? "guided" : "text", started_at: at.toISOString(), last_at: at.toISOString() });
-      msgRows.push({ conversation_id: convId, school_id: schoolId, role: "parent", text: h.q, author_id: parent.id, created_at: at.toISOString() });
+      msgRows.push({ conversation_id: convId, school_id: schoolId, role: "parent", text: h.q, author_id: parent.id, citations: [], created_at: at.toISOString() });
       const fb = h.outcome === "answered" ? (r() < (h.up ?? 0.4) ? 1 : r() < (h.down ?? 0.03) ? -1 : null) : h.outcome === "unsure" && r() < 0.2 ? -1 : null;
       msgRows.push({
         conversation_id: convId,
@@ -279,6 +304,7 @@ async function seedHistory(schoolId: string, parents: Array<{ id: string; name: 
         reason: "seed_history",
         topic: topicOf(h.q),
         latency_ms: 900 + Math.floor(r() * 1800),
+        citations: h.outcome === "answered" ? (citeFor.get(h.q) ?? []) : [],
         feedback: fb,
         created_at: new Date(at.getTime() + 2000).toISOString(),
       });

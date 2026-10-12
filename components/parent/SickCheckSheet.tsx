@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 
@@ -22,12 +22,14 @@ const SYMPTOMS = [
 export function SickCheckSheet({ open, onClose, onAsk, childName }: { open: boolean; onClose: () => void; onAsk: (q: string) => void; childName: string }) {
   const [picked, setPicked] = useState<string[]>([]);
   const [meds, setMeds] = useState<boolean | null>(null);
-  useEffect(() => {
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setPicked([]);
       setMeds(null);
     }
-  }, [open]);
+  }
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const labels = SYMPTOMS.filter((s) => picked.includes(s.id)).map((s) => s.label.toLowerCase().replace(/ \(.+\)/, ""));
   const question =

@@ -79,9 +79,12 @@ export function Sheet({
   useBackToClose(open, () => onOpenChange(false));
   const [panelWidth, setPanelWidth] = useState(width);
   const [snap, setSnap] = useState<number | string | null>(snapPoints?.[0] ?? null);
-  useEffect(() => {
+  // Each time it opens, start at the first snap point (adjusting state during render, not in an effect).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setSnap(snapPoints?.[0] ?? null);
-  }, [open, snapPoints]);
+  }
 
   function startResize(e: React.PointerEvent) {
     e.preventDefault();

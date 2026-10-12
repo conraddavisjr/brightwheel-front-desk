@@ -47,6 +47,7 @@ const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
 interface SchoolCtx {
   allow: string[];
+  disabledCategories: string[];
   rules: Array<{ id: string; name: string; description: string; pattern: string | null; category: string; enabled: boolean }>;
 }
 
@@ -56,9 +57,12 @@ export async function schoolPrivacyContext(schoolId: string): Promise<SchoolCtx>
     await db().from("privacy_rules").select("id,name,description,pattern,category,enabled,preset").eq("school_id", schoolId),
     "rules",
   ) as Array<SchoolCtx["rules"][number] & { preset: boolean }>;
+  const presetCats = new Map<string, boolean>();
+  for (const r of rules.filter((x) => x.preset)) presetCats.set(r.category, (presetCats.get(r.category) ?? false) || r.enabled);
   return {
     allow: [school.phone, school.email, school.address].filter(Boolean) as string[],
     rules: rules.filter((r) => !r.preset),
+    disabledCategories: [...presetCats.entries()].filter(([, anyOn]) => !anyOn).map(([c]) => c),
   };
 }
 
@@ -132,7 +136,7 @@ export async function ingestDocument(input: IngestInput, opts: { force?: boolean
   const rows = findings.map((f: Finding) => {
     const past = decided.get(`${f.category}|${f.excerpt}`);
     const wasHeld = prior.some((p) => p.category === f.category && p.excerpt === f.excerpt);
-    if (!past && !wasHeld) newlyHeld++;
+    if (!past && !wasHeld && visibility === "family") newlyHeld++;
     return {
       school_id: input.schoolId,
       document_id: documentId,
@@ -145,7 +149,8 @@ export async function ingestDocument(input: IngestInput, opts: { force?: boolean
       detector: f.detector,
       confidence: f.confidence,
       reason: f.reason,
-      status: past?.status ?? "held",
+      // In a staff-only document a finding is already protected; the director reviews the document once instead.
+      status: past?.status ?? (visibility === "staff" ? "staff_only" : "held"),
       resolved_by: past?.resolved_by ?? null,
       resolved_at: past?.resolved_at ?? null,
     };
