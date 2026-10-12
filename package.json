@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "seed": "node --conditions=react-server --env-file=.env.local --import tsx scripts/seed.ts",
     "db:reset": "supabase db reset",

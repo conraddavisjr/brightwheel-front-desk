@@ -17,7 +17,9 @@ export async function GET(req: Request) {
   let target = `/operator/sources?connected=${kind}`;
   try {
     const t = await exchangeGoogleCode(url.searchParams.get("code") ?? "");
-    const existing = await db().from("sources").select("id,config").eq("school_id", auth.session.schoolId).eq("kind", kind).eq("account_label", t.email ?? "").maybeSingle();
+    const sameAccount = await db().from("sources").select("id,config").eq("school_id", auth.session.schoolId).eq("kind", kind).eq("account_label", t.email ?? "").maybeSingle();
+    const demo = sameAccount.data ? null : (await db().from("sources").select("id,config").eq("school_id", auth.session.schoolId).eq("kind", kind).is("token_enc", null).limit(1).maybeSingle()).data;
+    const existing = { data: sameAccount.data ?? demo };
     const row = {
       school_id: auth.session.schoolId,
       kind,

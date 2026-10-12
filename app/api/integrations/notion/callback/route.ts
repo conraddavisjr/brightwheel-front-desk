@@ -16,7 +16,10 @@ export async function GET(req: Request) {
   let target = "/operator/sources?connected=notion";
   try {
     const t = await exchangeNotionCode(url.searchParams.get("code") ?? "");
-    const existing = await db().from("sources").select("id").eq("school_id", auth.session.schoolId).eq("kind", "notion").eq("config->>workspaceId", t.workspaceId).maybeSingle();
+    const sameWorkspace = await db().from("sources").select("id").eq("school_id", auth.session.schoolId).eq("kind", "notion").eq("config->>workspaceId", t.workspaceId).maybeSingle();
+    // A seeded demo source (no token yet) is upgraded in place, so its pages are replaced by the live ones.
+    const demo = sameWorkspace.data ? null : (await db().from("sources").select("id").eq("school_id", auth.session.schoolId).eq("kind", "notion").is("token_enc", null).limit(1).maybeSingle()).data;
+    const existing = { data: sameWorkspace.data ?? demo };
     const row = { school_id: auth.session.schoolId, kind: "notion", name: "Notion", account_label: t.workspaceName ?? "Notion workspace", token_enc: encrypt(t.accessToken), status: "connected", config: { workspaceId: t.workspaceId } };
     const source = existing.data
       ? must(await db().from("sources").update(row).eq("id", existing.data.id).select("id").single(), "source")

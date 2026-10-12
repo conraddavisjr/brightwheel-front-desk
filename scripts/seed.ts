@@ -56,7 +56,7 @@ const SCHOOLS = [
       { kind: "notion", name: "Notion", account_label: "Harbor Kids team space", dir: "notion" },
       { kind: "drive", name: "Google Drive", account_label: "office.harborkids@example.com", dir: "drive" },
     ],
-    calendar: { kind: "calendar", name: "Google Calendar", account_label: "Harbor Kids Family Calendar" },
+    calendar: { kind: "ical", name: "Google Calendar (public iCal)", account_label: "Harbor Kids Family Calendar" },
   },
 ] as const;
 
@@ -209,7 +209,11 @@ async function main() {
       events: Array<{ id: string; title: string; start: string; end: string; allDay: boolean; location: string; description: string; visibility: string }>;
     };
     const calSource = must(
-      await client.from("sources").insert({ school_id: schoolId, kind: def.calendar.kind, name: def.calendar.name, account_label: def.calendar.account_label, status: "connected", config: { demo: true }, last_synced_at: new Date().toISOString() }).select("id").single(),
+      await client
+        .from("sources")
+        .insert({ school_id: schoolId, kind: def.calendar.kind, name: def.calendar.name, account_label: def.calendar.account_label, status: "connected", config: { url: `${process.env.APP_URL ?? "http://localhost:3000"}/demo/${def.slug}/calendar.ics` }, last_synced_at: new Date().toISOString() })
+        .select("id")
+        .single(),
       "calendar source",
     );
     const toTs = (d: string, allDay: boolean) => (allDay ? zonedMidnight(d, cal.timeZone).toISOString() : new Date(d).toISOString());
