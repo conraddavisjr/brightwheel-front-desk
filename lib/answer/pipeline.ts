@@ -136,7 +136,11 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   }
 
   // Hours are answered from structured data, with the handbook as backup context.
-  const isHours = topic === "hours" && /\b(open|close|hours?|time)\b/i.test(question) && Object.keys(school.hours).length > 0;
+  const isHours =
+    Object.keys(school.hours).length > 0 &&
+    !/\bper hour\b|\ban hour\b|\bhourly\b/i.test(question) &&
+    /\b(open|opens|close|closes|closing|opening|what are your hours|hours of operation|business hours|what time do you|abren|cierran|horario)\b/i.test(question) &&
+    !/\b(holiday|thanksgiving|christmas|break|closed (on|for)|closure)\b/i.test(question);
 
   if (retrieval.strength === "none" && !isHours) {
     yield* finish(await unsure(question, topic, input, school, null, persist), "no_match");
@@ -194,7 +198,10 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
 /** Turn the model's answer into the parent's card, keeping only what we can stand behind. */
 export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalCaveat: boolean, isHours: boolean): AnswerCard | null {
   const byId = new Map(r.passages.map((p) => [p.id, p]));
-  const cited = [...new Set(a.citations)].map((id) => byId.get(id)).filter((p): p is NonNullable<typeof p> => Boolean(p));
+  const stale = r.conflict?.outdatedDocumentId ?? null;
+  const cited = [...new Set(a.citations)]
+    .map((id) => byId.get(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p) && p!.documentId !== stale);
   const evById = new Map(r.events.map((e) => [e.id, e]));
   const events = [...new Set(a.eventIds)].map((id) => evById.get(id)).filter((e): e is NonNullable<typeof e> => Boolean(e));
 

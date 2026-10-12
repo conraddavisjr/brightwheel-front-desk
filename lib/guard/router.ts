@@ -47,6 +47,7 @@ const OTHER_PEOPLE = [
   /\b(which|what|who|whose) (kids?|children|child|families|parents?|students?)\b.{0,40}\b(has|have|got|had|is|are|was|were)\b.{0,30}\b(lice|sick|covid|flu|hurt|injured|bit|bitten|allerg\w*|diagnos\w*|behind on|owe|custody|iep|special needs)\b/i,
   /\bwho (got|was|is) (hurt|injured|bitten|sick|sent home|in trouble)\b/i,
   /\b(how much|what) (do|does) (the )?(teachers?|staff|director|ms\.?|mr\.?|miss)\b.{0,20}\b(make|earn|get paid|salary|wage)\b/i,
+  /\bhow much (do|does|did)\s+(?!it|this|that|tuition|care|the program|a spot|enrollment)[\w.' -]{2,40}\s(make|earn|get paid)\b/i,
   /\b(teacher|staff|director)'?s?\b.{0,20}\b(salary|wage|pay rate|home address|personal (phone|cell|email)|background check|ssn|social security)\b/i,
   /\b(list|names) of (all )?(the )?(families|parents|kids|children|students)\b/i,
 ];

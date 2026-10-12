@@ -28,7 +28,7 @@ const SYSTEM = (i: GenerateInput, today: string) => `You are the front desk assi
 Rules:
 - Use ONLY the sources and events below. If they do not directly answer the question, set grounded=false and say briefly what you could not find. Never guess, never use outside knowledge about childcare in general.
 - Cite every source you used by id (S1, S2...). Copy numbers, times, prices and dates exactly.
-- If two sources disagree, prefer the newer or the one marked current, and say in the body that the school is confirming.
+- If two sources disagree, use the newer or the one marked current (a source marked OUTDATED below must never be used for numbers or rules).
 - Never share information about a specific child, family or staff member, codes, passwords or anything marked [withheld].
 - Never give medical advice or a diagnosis. You may explain the school's policy.
 - Write like a warm, competent front desk: plain words, short sentences, no filler, no "according to the documents". Answer in the language the parent used.
@@ -37,7 +37,9 @@ Rules:
 - Today is ${today} (${i.timezone}).`;
 
 function sourcesBlock(r: Retrieval): string {
-  const s = r.passages.map((p) => `[${p.id}] ${p.title} > ${p.heading}${p.updatedAt ? ` (updated ${p.updatedAt.slice(0, 10)})` : ""}\n${p.text}`).join("\n\n");
+  const s = r.passages
+    .map((p) => `[${p.id}] ${p.title} > ${p.heading}${p.updatedAt ? ` (updated ${p.updatedAt.slice(0, 10)})` : ""}${p.documentId === r.conflict?.outdatedDocumentId ? " [OUTDATED: superseded by a newer policy]" : ""}\n${p.text}`)
+    .join("\n\n");
   const e = r.events
     .map((ev) => `[${ev.id}] ${ev.title} | ${ev.allDay ? "all day" : "timed"} | starts ${ev.startsAt}${ev.endsAt ? ` | ends ${ev.endsAt}` : ""}${ev.location ? ` | ${ev.location}` : ""}${ev.description ? `\n${ev.description}` : ""}`)
     .join("\n");
@@ -112,8 +114,13 @@ function overlap(a: Set<string>, text: string): number {
   return stubTokens(text).filter((t) => a.has(t)).length;
 }
 
+/** Everyday words that say nothing about what is being asked; only the subject words must appear in a passage. */
 const GENERIC = new Set(
-  "kid child children son daughter too really off up drop pick open offer have need get go come know tell want like much many long time day today tomorrow week school center program class room teacher let any ok okay also still there here".split(" ").map((w) => w.replace(/(ing|ed|es|s)$/, "")),
+  ("kid child children son daughter boy girl baby toddler too really off up drop pick open offer have had has need get got go come know tell want like much many long time day today tonight tomorrow yesterday morning night last week month year " +
+    "school center program class room teacher let any ok okay also still there here happen happens bring should would could might must make made keep put take give use thing things way next first please thanks " +
+    "just even ever every some someone something anything everything other another new old same more most less few own able sure question answer help info information")
+    .split(" ")
+    .map((w) => w.replace(/(ing|ed|es|s)$/, "").replace(/(.)\1$/, "$1")),
 );
 
 const clean = (l: string) => l.replace(/^[-*]\s+/, "").replace(/\*\*/g, "").replace(/^#+\s*/, "").trim();
@@ -143,10 +150,12 @@ export function extractiveAnswer(input: GenerateInput): ModelAnswer {
     };
   }
 
-  const top = r.passages.slice(0, 3);
+  // In a conflict, never answer from the outdated document.
+  const outdated = r.conflict?.outdatedDocumentId ?? null;
+  const top = r.passages.filter((p) => p.documentId !== outdated).slice(0, 3);
   if (top.length === 0) return notFound(followUps);
   // The question's own subject words ("summer", "camp") must appear, not just its topic ("enrollment").
-  const subject = [...q].filter((t) => !t.startsWith("#") && !t.includes("_") && !GENERIC.has(t));
+  const subject = [...q].filter((t) => !t.startsWith("#") && !t.includes("_") && !GENERIC.has(t) && !/^\d+$/.test(t) && t.length > 2);
   const covered = (text: string) => {
     const have = new Set(stubTokens(text));
     // A word counts if the passage has it or its concept ("sick" is covered by a passage about illness).
@@ -154,7 +163,12 @@ export function extractiveAnswer(input: GenerateInput): ModelAnswer {
   };
   const bestCover = Math.max(...top.map((p) => covered(`${p.heading} ${p.text}`)));
   if (subject.length > 0 && bestCover < (subject.length <= 2 ? subject.length : Math.ceil(subject.length * 0.67))) return notFound(followUps);
-  const scored = top.map((p) => ({ p, score: overlap(q, `${p.heading} ${p.text}`) })).sort((a, b) => b.score - a.score);
+  // "How much / what time / what temperature" wants a figure: prefer passages that have one (a price table, a time, a temperature).
+  const wantsFigure = /\b(how much|cost|price|tuition|fee|what time|when do|temperature|fever|how many|how long)\b/i.test(question);
+  const figure = (t: string) => (/\$\s?\d|\d\s?(am|pm)\b|\d+(\.\d)?\s?°|\d+\s?(hours?|days?|minutes?)\b/i.test(t) ? 1 : 0) + (/^\s*\|/m.test(t) && /\$\s?\d/.test(t) ? 1 : 0);
+  const scored = top
+    .map((p) => ({ p, score: overlap(q, `${p.heading} ${p.text}`) + (wantsFigure ? figure(p.text) * 1.5 : 0) }))
+    .sort((a, b) => b.score - a.score);
   const best = scored[0];
   const needed = Math.min(2, [...q].filter((t) => !t.includes("_")).length);
   if (best.score < needed) return notFound(followUps);
@@ -182,6 +196,9 @@ export function extractiveAnswer(input: GenerateInput): ModelAnswer {
   if (kind === "steps" && steps.length === 0) kind = "answer";
   if (kind === "menu" && facts.length === 0) kind = "answer";
 
+  if ((kind === "tuition" || kind === "menu") && facts.length && !rankedProse.some((l) => /\$\s?\d/.test(l))) {
+    rankedProse.unshift(`${facts[0].label}: ${facts[0].value}`);
+  }
   const leaf = best.p.heading.split(" > ").pop()?.replace(/^\d+[.)]\s*/, "") ?? "";
   let headline = rankedProse[0] ?? (facts[0] ? `${facts[0].label}: ${facts[0].value}` : clean(lines[0] ?? ""));
   // Never repeat a step as the headline; lead with what the section is instead.

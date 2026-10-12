@@ -47,7 +47,7 @@ export interface Retrieval {
   passages: Passage[];
   events: EventHit[];
   strength: Strength;
-  conflict: { a: Passage; b: Passage; note: string } | null;
+  conflict: { a: Passage; b: Passage; note: string; outdatedDocumentId: string | null } | null;
   embedModel: string | null;
 }
 
@@ -114,7 +114,11 @@ export async function searchKnowledge(schoolId: string, question: string, limit 
 
   const events = EVENTISH.test(question) ? await searchEvents(schoolId, question) : [];
   const near = NEAR[embedModel ?? "stub"] ?? NEAR.default;
-  return { passages, events, strength: judgeStrength(passages, events, near), conflict: findConflict(passages), embedModel };
+  const conflict = findConflict(passages);
+  // The outdated side of a conflict goes last, so the model (and the extractive fallback) lead with the current policy.
+  const ordered = conflict?.outdatedDocumentId ? [...passages.filter((p) => p.documentId !== conflict.outdatedDocumentId), ...passages.filter((p) => p.documentId === conflict.outdatedDocumentId)].map((p, i) => ({ ...p, id: `S${i + 1}` })) : passages;
+  const fixed = conflict ? { ...conflict, a: ordered.find((p) => p.chunkId === conflict.a.chunkId)!, b: ordered.find((p) => p.chunkId === conflict.b.chunkId)! } : null;
+  return { passages: ordered, events, strength: judgeStrength(ordered, events, near), conflict: fixed, embedModel };
 }
 
 /**
@@ -148,6 +152,17 @@ function measures(text: string): Set<string> {
  * pick a winner silently: the parent gets the newer one with a caveat and
  * the director gets an Inbox item to fix the source.
  */
+const OUTDATED = /\b(old|outdated|archived?|superseded|previous|deprecated)\b|\b20(1\d|2[0-4])\b/i;
+
+/** Which side is stale: the one its title calls old, else the one edited longer ago. */
+function outdatedOf(a: Passage, b: Passage): string | null {
+  const oa = OUTDATED.test(a.title);
+  const ob = OUTDATED.test(b.title);
+  if (oa !== ob) return oa ? a.documentId : b.documentId;
+  if (a.updatedAt && b.updatedAt && a.updatedAt !== b.updatedAt) return a.updatedAt < b.updatedAt ? a.documentId : b.documentId;
+  return null;
+}
+
 export function findConflict(passages: Passage[]): Retrieval["conflict"] {
   const top = passages.slice(0, 8);
   for (let i = 0; i < top.length; i++) {
@@ -165,11 +180,11 @@ export function findConflict(passages: Passage[]): Retrieval["conflict"] {
         const xa = kinds(ma, k);
         const xb = kinds(mb, k);
         if (xa.length && xb.length && !xa.some((x) => xb.includes(x)) && k === "F") {
-          return { a, b, note: `"${a.title}" says ${xa.join(", ")} but "${b.title}" says ${xb.join(", ")}.` };
+          return { a, b, note: `"${a.title}" says ${xa.join(", ")} but "${b.title}" says ${xb.join(", ")}.`, outdatedDocumentId: outdatedOf(a, b) };
         }
       }
-      if (/\b(old|outdated|archive|2024|2023|previous|superseded)\b/i.test(`${a.title} ${b.title}`)) {
-        return { a, b, note: `"${a.title}" and "${b.title}" both cover this, and one looks outdated.` };
+      if (OUTDATED.test(`${a.title} ${b.title}`)) {
+        return { a, b, note: `"${a.title}" and "${b.title}" both cover this, and one looks outdated.`, outdatedDocumentId: outdatedOf(a, b) };
       }
     }
   }

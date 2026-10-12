@@ -128,13 +128,13 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
           <section key={sec.kind} id={sec.kind} className="scroll-mt-6 rounded-[20px] bg-surface p-4 shadow-1 ring-1 ring-line-soft sm:p-6">
             <div className="flex flex-wrap items-start gap-4">
               <BrandIcon kind={sec.kind} size={48} />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[60%] flex-1">
                 <h2 className="text-title-2 font-bold text-ink">{sec.title}</h2>
                 <p className="mt-0.5 max-w-xl text-dense text-muted">{sec.body}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none">
                 {sec.kind === "calendar" ? (
-                  <button type="button" onClick={() => setIcalOpen(true)} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface px-4 text-dense font-semibold text-ink ring-1 ring-line hover:bg-sunken">
+                  <button type="button" onClick={() => setIcalOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-surface px-4 text-dense font-semibold text-ink ring-1 ring-line hover:bg-sunken">
                     <Link2 className="h-4 w-4" aria-hidden /> Use a calendar link
                   </button>
                 ) : null}
@@ -147,7 +147,7 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                       toast({ tone: "neutral", title: `${sec.title} OAuth isn't configured on this deployment`, body: "See docs/SETUP.md. The demo schools show seeded content in the meantime." });
                     }
                   }}
-                  className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-dense font-semibold ${can ? "bg-accent text-on-accent shadow-1 hover:bg-accent-hover" : "bg-sunken text-muted"}`}
+                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-dense font-semibold ${can ? "bg-accent text-on-accent shadow-1 hover:bg-accent-hover" : "bg-sunken text-muted"}`}
                 >
                   <Plus className="h-4 w-4" aria-hidden /> {mine.length ? `Connect another` : `Connect ${sec.title === "Calendar" ? "Google Calendar" : sec.title}`}
                 </a>
@@ -157,7 +157,7 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
               <ul className="mt-5 space-y-2.5">
                 {mine.map((s) => (
                   <li key={s.id} className="flex flex-wrap items-center gap-3 rounded-[14px] bg-canvas-operator p-3.5 ring-1 ring-line-soft">
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-[55%] flex-1">
                       <p className="flex flex-wrap items-center gap-2 text-dense font-semibold text-ink">
                         {s.account ?? s.name}
                         {s.status === "error" ? <Pill tone="danger">Needs attention</Pill> : s.status === "syncing" ? <Pill tone="info">Syncing</Pill> : <Pill tone="success">Connected</Pill>}

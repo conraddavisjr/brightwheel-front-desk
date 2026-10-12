@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ServiceWorker } from "@/components/brand/ServiceWorker";
 
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"], display: "swap" });
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
   description: "An AI front desk for childcare centers: instant, trustworthy answers for families, and a knowledge base directors control.",
   applicationName: "Front Desk",
   manifest: "/manifest.webmanifest",
+  icons: { icon: [{ url: "/icons/favicon-32.png", sizes: "32x32" }, { url: "/icons/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Front Desk", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
@@ -29,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${figtree.variable} h-full antialiased`}>
       <body className="min-h-full">
         <ToastProvider>{children}</ToastProvider>
+        <ServiceWorker />
       </body>
     </html>
   );

@@ -1,0 +1,333 @@
+{
+  "$schema": "../../../ai-eval-cafe/docs/contracts/evals-cafe-dataset.v1.schema.json",
+  "name": "happy",
+  "tags": [
+    "happy"
+  ],
+  "cases": [
+    {
+      "id": "hk-close",
+      "title": "What time do you close?",
+      "input": {
+        "prompt": "What time do you close?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "5:30",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      },
+      "smoke": true
+    },
+    {
+      "id": "hk-fever",
+      "title": "My son had a fever of 100.6 last night. Can he come in today?",
+      "input": {
+        "prompt": "My son had a fever of 100.6 last night. Can he come in today?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "24 hours|100\\.4",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      },
+      "smoke": true
+    },
+    {
+      "id": "hk-picture-day",
+      "title": "When is picture day?",
+      "input": {
+        "prompt": "When is picture day?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "Picture Day",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          },
+          {
+            "type": "count",
+            "path": "$.output.events",
+            "min": 1
+          }
+        ]
+      },
+      "smoke": true
+    },
+    {
+      "id": "hk-thanksgiving",
+      "title": "Are you closed the day after Thanksgiving?",
+      "input": {
+        "prompt": "Are you closed the day after Thanksgiving?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "Thanksgiving",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hk-tuition",
+      "title": "How much is tuition for the toddler program?",
+      "input": {
+        "prompt": "How much is tuition for the toddler program?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "\\$",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hk-late",
+      "title": "What happens if I'm late for pickup?",
+      "input": {
+        "prompt": "What happens if I'm late for pickup?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "\\$1|minute|late",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hk-lunch",
+      "title": "What's for lunch this week?",
+      "input": {
+        "prompt": "What's for lunch this week?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "lunch|menu|snack",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hk-tour",
+      "title": "How do I book a tour?",
+      "input": {
+        "prompt": "How do I book a tour?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "tour",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hk-spanish",
+      "title": "\u00bfA qu\u00e9 hora cierran?",
+      "input": {
+        "prompt": "\u00bfA qu\u00e9 hora cierran?",
+        "school": "harbor-kids"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "5:30",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sv-hours",
+      "title": "What are your hours?",
+      "input": {
+        "prompt": "What are your hours?",
+        "school": "sunflower-valley"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "7",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      },
+      "smoke": true
+    },
+    {
+      "id": "sv-picnic",
+      "title": "When is the fall family picnic?",
+      "input": {
+        "prompt": "When is the fall family picnic?",
+        "school": "sunflower-valley"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "Picnic",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sv-pinkeye",
+      "title": "Can my daughter come in with pink eye?",
+      "input": {
+        "prompt": "Can my daughter come in with pink eye?",
+        "school": "sunflower-valley"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "eye|conjunctivitis",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sv-infant-tuition",
+      "title": "How much is infant tuition?",
+      "input": {
+        "prompt": "How much is infant tuition?",
+        "school": "sunflower-valley"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "\\$",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sv-nuts",
+      "title": "Is the school nut-free?",
+      "input": {
+        "prompt": "Is the school nut-free?",
+        "school": "sunflower-valley"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "nut",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sv-naps",
+      "title": "What should my toddler bring for nap time?",
+      "input": {
+        "prompt": "What should my toddler bring for nap time?",
+        "school": "sunflower-valley"
+      },
+      "expect": {
+        "outcome": "served",
+        "assertions": [
+          {
+            "type": "regexPresent",
+            "pattern": "nap|blanket|sheet|crib",
+            "path": "$.output.text",
+            "when": [
+              "served"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
