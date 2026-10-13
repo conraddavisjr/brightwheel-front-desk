@@ -24,6 +24,8 @@ h1 span { color: var(--accent); }
 .lede { margin: 12px 0 0; font-size: 13.5px; line-height: 1.45; text-wrap: pretty; max-width: 68ch; }
 .cols { display: grid; grid-template-columns: minmax(0, 1fr) 224px; gap: 24px; margin-top: 13px; }
 h2 { margin: 0 0 7px; font: 700 11px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent); }
+.does-line { margin: 0 0 6px; text-wrap: pretty; }
+.does-line strong { font-weight: 700; }
 .does { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
 .does h3 { margin: 0 0 4px; font: 700 13px/1.3 var(--display); }
 ul { margin: 0; padding-left: 15px; }
@@ -78,35 +80,19 @@ footer h2 { margin: 1px 0 0; }
   <div class="cols">
     <main>
       <h2>What it does</h2>
-      <div class="does">
-        <div>
-          <h3>For families</h3>
-          <ul>
-            <li>Ask by text, voice or a guided "Can my child come in today?" check.</li>
-            <li>One direct answer with its source: hours, tuition tables, policy steps, events with Add to Calendar.</li>
-            <li>Anything uncertain goes to staff, and their reply lands on the parent's home.</li>
-          </ul>
-        </div>
-        <div>
-          <h3>For directors</h3>
-          <ul>
-            <li>Connect Notion, Google Drive and Calendar (real, public demo workspaces).</li>
-            <li>An Inbox of unanswered questions and conflicting documents: answer once, done for everyone.</li>
-            <li>Privacy Guard holds codes, payroll, custody and child health before families can search them.</li>
-          </ul>
-        </div>
-      </div>
+      <p class="does-line"><strong>Families</strong> ask by text, voice or a guided "Can my child come in today?" check, and get one direct answer with its source: hours, tuition, policy steps, events with Add to Calendar. Anything uncertain goes to staff, whose reply lands on the parent's home.</p>
+      <p class="does-line"><strong>Directors</strong> see what families ask, answer gaps once from an Inbox, edit the knowledge and hours, and decide what Privacy Guard holds back (codes, payroll, custody, child health).</p>
 
       <div class="brief">
         <h2>How it meets the brief</h2>
         <table>
-          <tr><th>Realistic scope, finished</th><td>Two schools: a tidy Notion handbook, and a deliberately messy Notion, Drive and Calendar mix with real conflicts and secrets. Both sides work end to end, deployed and mobile-first.</td></tr>
-          <tr><th>Hands-on execution</th><td>Built, tested and shipped end to end: 144 end-to-end journeys on desktop and phone, 107 unit tests, zero accessibility violations, and automated checks that block any AI change that falls short of our quality and safety standards.</td></tr>
+          <tr><th>Realistic scope, finished</th><td>The full loop works end to end: a question the documents can't answer reaches the director's Inbox, and the published answer reaches every family who asked. Two fictional schools, one with deliberately messy documents full of realistic conflicts and secrets.</td></tr>
+          <tr><th>Hands-on execution</th><td>I directed the build with Claude Code, tested both sides on my own phone, and caught bugs like a sign-in spinner that hung after deploys; an independent Codex audit drove a round of safety fixes. Backed by 144 end-to-end journeys, 107 unit tests and 62 eval cases on every change.</td></tr>
           <tr><th>Customer judgment</th><td>The answer comes first, in one sentence. One tap reaches a person. Internal problems stay internal: document conflicts go to the director, never to a parent.</td></tr>
-          <tr><th>AI judgment</th><td>Three checks before any answer: retrieval strength, the model's own grounded flag, and a real citation. Failing one gives an honest "I don't have that yet" and an Inbox item, never a guess.</td></tr>
-          <tr><th>Technical judgment</th><td>Hybrid search (pgvector plus full text, fused with RRF) in Postgres. Rules run before any model: 911 first, injections refused. Every field is scanned before a parent sees it. Row-level security per school. $0 to run: Gemini free tier, a hard daily cap, an offline fallback.</td></tr>
-          <tr><th>Operator control</th><td>Edit the knowledge and the hours families see, add or toggle privacy rules, redact or allow with undo, and see what families ask and where answers fell short.</td></tr>
-          <tr><th>Clarity</th><td>This page, a README with the decisions and honest limits, and an eval suite anyone can rerun.</td></tr>
+          <tr><th>AI judgment</th><td>Final answers must pass retrieval relevance, the model's own grounded flag and a valid citation. If any check fails, the parent gets "I don't have that yet" and the question goes to the director's Inbox.</td></tr>
+          <tr><th>Technical judgment</th><td>Postgres keeps documents and hybrid search (vectors plus full text, fused with RRF) in one store. Plain-code rules handle safety (911 first, injections refused); AI interprets policy. Every answer field is scanned before a parent sees it. Queries are scoped to the signed school session; row-level security blocks direct database access.</td></tr>
+          <tr><th>Operator control</th><td>Directors change the source of truth, privacy rules and hours directly, and every Privacy Guard decision can be undone.</td></tr>
+          <tr><th>Limits, plainly</th><td>Fictional schools, families and secrets; one-tap demo sign-in; family notifications are simulated. Sources are snapshots of public demo pages, and conflict detection covers temperatures and outdated versions.</td></tr>
         </table>
       </div>
     </main>
@@ -124,10 +110,10 @@ footer h2 { margin: 1px 0 0; }
   </div>
 
   <div class="stats" aria-label="Results">
-    <div class="stat good"><b>62/62</b><span>evals on live Gemini, incl. 15 prompt injections</span></div>
-    <div class="stat good"><b>0</b><span>WCAG 2.2 AA violations, light and dark</span></div>
-    <div class="stat"><b>&lt;2s</b><span>to the first words of an answer</span></div>
-    <div class="stat"><b>$0</b><span>to run, with a hard daily cap</span></div>
+    <div class="stat good"><b>62/62</b><span>eval cases on live Gemini, 15 of them prompt injections (judge mocked)</span></div>
+    <div class="stat good"><b>0</b><span>automated WCAG 2.2 AA (axe) violations on tested screens</span></div>
+    <div class="stat"><b>~2s</b><span>typical wait until the answer itself starts to appear (warm)</span></div>
+    <div class="stat"><b>$0</b><span>on free tiers, with capped AI use and a no-AI fallback</span></div>
   </div>
 
   <footer>
