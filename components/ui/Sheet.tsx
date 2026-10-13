@@ -12,26 +12,34 @@ import { X } from "lucide-react";
  * - focus is trapped inside and returned to the trigger on close (Radix Dialog under Vaul)
  */
 
-/** Push a history entry while open so the browser's Back closes the overlay first. */
+/**
+ * Push a history entry while open so the browser's Back closes the overlay first.
+ * Each overlay tags its entry with its own id, so stacked overlays (a sheet over the
+ * chat drawer) close one at a time: an overlay closes only when its own entry is gone.
+ */
+let nextOverlayId = 1;
+const openOverlays = (): number[] => (window.history.state?.__overlays as number[] | undefined) ?? [];
+
 export function useBackToClose(open: boolean, close: () => void) {
-  const pushed = useRef(false);
+  const id = useRef(0);
   const closeRef = useRef(close);
   useEffect(() => {
     closeRef.current = close;
   }, [close]);
   useEffect(() => {
     if (!open) {
-      if (pushed.current) {
-        pushed.current = false;
-        if (window.history.state?.__sheet) window.history.back();
+      // Closed by the app (not by Back): step back over our own entry.
+      if (id.current && openOverlays().includes(id.current)) {
+        id.current = 0;
+        window.history.back();
       }
       return;
     }
-    window.history.pushState({ ...(window.history.state ?? {}), __sheet: true }, "");
-    pushed.current = true;
+    const mine = (id.current = nextOverlayId++);
+    window.history.pushState({ ...(window.history.state ?? {}), __overlays: [...openOverlays(), mine] }, "");
     const onPop = () => {
-      if (pushed.current) {
-        pushed.current = false;
+      if (!openOverlays().includes(mine)) {
+        id.current = 0;
         closeRef.current();
       }
     };

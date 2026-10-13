@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { BookOpenCheck, CalendarDays, MessageCircleQuestion, ShieldCheck, Sparkles, Mic, Inbox, PlugZap } from "lucide-react";
 import { Wordmark } from "@/components/brand/WheelMark";
 import { DemoDoor } from "@/components/landing/DemoDoor";
+import { SmoothLink } from "@/components/landing/SmoothLink";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Pill } from "@/components/ui/Pill";
 import { Disclaimer } from "@/components/brand/Disclaimer";
@@ -13,9 +13,9 @@ export default function Landing() {
       <header className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Wordmark />
         <div className="flex items-center gap-1">
-          <Link href="#how" className="rounded-full px-3 py-2 text-label font-semibold text-muted hover:text-ink">
+          <SmoothLink to="how" className="rounded-full px-3 py-2 text-label font-semibold text-muted hover:text-ink">
             How it works
-          </Link>
+          </SmoothLink>
           <ThemeToggle />
         </div>
       </header>

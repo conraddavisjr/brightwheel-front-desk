@@ -5,7 +5,7 @@ import { Clock3, Wallet, Thermometer, UtensilsCrossed, CalendarDays, Footprints,
 import type { AnswerCard, Citation } from "@/lib/schemas";
 import { readAsk } from "@/lib/client/askStream";
 import { useSpeechInput } from "@/lib/client/useSpeechInput";
-import { speak, stopSpeaking } from "@/lib/client/speaker";
+import { say, stopSpeaking } from "@/lib/client/speaker";
 import { AskBar } from "@/components/parent/AskBar";
 import { AnswerView } from "@/components/parent/AnswerView";
 import { VoiceOverlay } from "@/components/parent/VoiceOverlay";
@@ -161,7 +161,7 @@ export function AskApp({
           if (ev.type === "start") conversationId.current = ev.conversationId;
           else if (ev.type === "ack") {
             patch(id, (t) => ({ ...t, ack: ev.text }));
-            if (voiceMode.current) void speak(ev.text);
+            if (voiceMode.current) void say(ev.text);
           } else if (ev.type === "status") patch(id, (t) => ({ ...t, status: ev.label }));
           else if (ev.type === "partial") patch(id, (t) => ({ ...t, card: { ...t.card, ...ev.card } }));
           else if (ev.type === "done") {
@@ -182,7 +182,8 @@ export function AskApp({
         const card = final as AnswerCard | null;
         if (card) {
           setVoice("speaking");
-          await speak([card.headline, card.body].filter(Boolean).join(" "));
+          // Queued after the filler, never over it.
+          await say([card.headline, card.body].filter(Boolean).join(" "));
         }
         voiceMode.current = false;
         setVoice(null);

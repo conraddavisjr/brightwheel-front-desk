@@ -212,6 +212,15 @@
 }
 
 @layer base {
+  /* Tailwind v4 gives buttons the default arrow; anything clickable should show the hand. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="option"],
+  [role="tab"],
+  summary {
+    cursor: pointer;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;

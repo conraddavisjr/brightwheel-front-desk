@@ -60,7 +60,7 @@ test("chat opens in a drawer over home; a recent question opens its original ans
 
 test("the sick check opens from home", async ({ page }) => {
   await page.getByRole("button", { name: /Can Lucas come in today\?/ }).click();
-  await expect(page.getByRole("dialog").filter({ hasText: /Lucas/ }).first()).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Can Lucas come in today?" })).toBeVisible();
 });
 
 test("a staff answer from the Inbox reaches the parent's home", async ({ page, browser }) => {
@@ -83,4 +83,14 @@ test("a staff answer from the Inbox reaches the parent's home", async ({ page, b
 
   await page.reload();
   await expect(page.getByRole("region", { name: /From the front desk/ }).getByText(answer)).toBeVisible();
+});
+
+test("the sick check from home asks its question in the chat drawer", async ({ page }) => {
+  await page.getByRole("button", { name: /Can Lucas come in today\?/ }).click();
+  const check = page.getByRole("dialog", { name: "Can Lucas come in today?" });
+  await check.locator("label").first().click();
+  await check.getByRole("button", { name: /Check the policy/ }).click();
+  const chat = page.getByRole("dialog", { name: "Chat with Harbor Kids" });
+  await expect(chat.getByLabel("Your question")).toBeInViewport();
+  await expect(chat.locator("li[id^='turn-']").last()).toContainText(/Lucas/, { timeout: 20_000 });
 });

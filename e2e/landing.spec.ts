@@ -53,3 +53,15 @@ test("landing: the section heading says this is a demo", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "What you can do in this demo" })).toBeVisible();
 });
+
+test("landing: How it works glides down to the section", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "How it works" }).click();
+  // Mid-glide the page is partway down, not already at the section.
+  await page.waitForTimeout(120);
+  const mid = await page.evaluate(() => window.scrollY);
+  await expect(page.getByRole("heading", { name: "What you can do in this demo" })).toBeInViewport();
+  const end = await page.evaluate(() => window.scrollY);
+  expect(mid).toBeLessThan(end);
+  await expect(page).toHaveURL(/#how$/);
+});
