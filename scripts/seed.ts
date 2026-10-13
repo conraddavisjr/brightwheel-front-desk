@@ -19,8 +19,19 @@ import { PRESET_RULES } from "@/lib/privacy/presets";
 import { normalizeQuestion, topicOf } from "@/lib/guard/router";
 import { zonedMidnight } from "@/lib/time";
 import { searchKnowledge } from "@/lib/retrieval/search";
+import { config } from "@/lib/config";
 
 const ROOT = join(process.cwd(), "seed");
+
+/** The real page in the demo workspace (seed/links.json); a published Notion site opens it publicly. */
+const LINKS = JSON.parse(readFileSync(join(ROOT, "links.json"), "utf8")) as Record<string, Record<string, { notion?: string; doc?: string; sheet?: string }>>;
+function originalUrl(slug: string, file: string): string | null {
+  const link = LINKS[slug]?.[file];
+  if (link?.notion) return config.integrations.notion.publicSite ? `https://${config.integrations.notion.publicSite}/${link.notion}` : `https://www.notion.so/${link.notion}`;
+  if (link?.doc) return `https://docs.google.com/document/d/${link.doc}/view`;
+  if (link?.sheet) return `https://docs.google.com/spreadsheets/d/${link.sheet}/view`;
+  return null;
+}
 
 const SCHOOLS = [
   {
@@ -193,7 +204,7 @@ async function main() {
             content,
             emoji: emoji ?? (s.kind === "drive" ? "📄" : null),
             parentTitle,
-            url: s.kind === "notion" ? `https://www.notion.so/${def.slug}/${encodeURIComponent(title.replace(/\s+/g, "-"))}` : `https://drive.google.com/demo/${def.slug}/${encodeURIComponent(file)}`,
+            url: originalUrl(def.slug, file),
             mime: ext === ".csv" ? "text/csv" : "text/markdown",
             sourceUpdatedAt: updated ? new Date(`${updated}T12:00:00-07:00`).toISOString() : new Date(Date.now() - 20 * 86400000).toISOString(),
           },

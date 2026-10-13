@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Users, Pencil, Plus, Loader2, ExternalLink, ShieldCheck, Archive, RotateCcw, Sparkles, Send, ChevronLeft, FileText } from "lucide-react";
+import { Lock, Users, Pencil, Plus, Loader2, ArrowUpRight, ShieldCheck, Archive, RotateCcw, Sparkles, Send, ChevronLeft, FileText } from "lucide-react";
 import { SearchBox } from "@/components/operator/InboxView";
 import { MarkdownView } from "@/components/operator/MarkdownView";
-import { BrandIcon } from "@/components/operator/BrandIcon";
+import { BrandIcon, brandName } from "@/components/operator/BrandIcon";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
 import { AnswerView } from "@/components/parent/AnswerView";
@@ -78,7 +78,7 @@ export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId:
               <p className="flex items-center gap-2 px-2 text-caption font-semibold text-muted">
                 <BrandIcon kind={g.kind} size={20} /> <span className="truncate">{g.label}</span>
               </p>
-              <ul className="mt-1.5 space-y-0.5">
+              <ul className="ml-[17px] mt-1.5 space-y-0.5 border-l border-line-soft pl-2">
                 {g.docs.map((d) => (
                   <li key={d.id}>
                     <button
@@ -108,7 +108,7 @@ export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId:
       </div>
 
       <div className="lg:hidden">
-        <Sheet open={mobileOpen && selected !== null} onOpenChange={setMobileOpen} title={docs.find((d) => d.id === selected)?.title ?? "Page"} side="bottom" snapPoints={[0.96]}>
+        <Sheet open={mobileOpen && selected !== null} onOpenChange={setMobileOpen} title={docs.find((d) => d.id === selected)?.title ?? "Page"} side="bottom" snapPoints={[0.9]}>
           {selected ? <DocPane id={selected} embedded /> : null}
         </Sheet>
       </div>
@@ -159,11 +159,24 @@ function DocPane({ id, embedded = false }: { id: string; embedded?: boolean }) {
 
   if (!data) {
     return (
-      <div className={`${embedded ? "" : "rounded-[16px] bg-surface p-8 shadow-1 ring-1 ring-line-soft"} space-y-3`} aria-busy="true">
-        <div className="shimmer h-8 w-2/3 rounded-full" />
-        <div className="shimmer h-4 w-full rounded-full" />
-        <div className="shimmer h-4 w-5/6 rounded-full" />
-        <div className="shimmer h-4 w-4/6 rounded-full" />
+      <div className={embedded ? "" : "rounded-[16px] bg-surface p-8 shadow-1 ring-1 ring-line-soft"} aria-busy="true" aria-label="Loading page">
+        <div className="flex items-center gap-2 border-b border-line-soft pb-3">
+          <div className="shimmer h-9 w-56 rounded-full" />
+          <div className="shimmer ml-auto h-9 w-24 rounded-full" />
+        </div>
+        <div className="mt-6 space-y-3">
+          <div className="shimmer h-7 w-2/3 rounded-full" />
+          <div className="shimmer h-4 w-full rounded-full" />
+          <div className="shimmer h-4 w-11/12 rounded-full" />
+          <div className="shimmer h-4 w-4/6 rounded-full" />
+        </div>
+        <div className="mt-8 space-y-3">
+          <div className="shimmer h-5 w-1/2 rounded-full" />
+          <div className="shimmer h-4 w-full rounded-full" />
+          <div className="shimmer h-4 w-5/6 rounded-full" />
+          <div className="shimmer h-4 w-full rounded-full" />
+          <div className="shimmer h-4 w-3/5 rounded-full" />
+        </div>
       </div>
     );
   }
@@ -194,7 +207,9 @@ function DocPane({ id, embedded = false }: { id: string; embedded?: boolean }) {
         <div className="ml-auto flex items-center gap-1">
           {d.url && !d.url.includes("/demo/") ? (
             <a href={d.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-label font-semibold text-muted hover:bg-sunken hover:text-ink">
-              <ExternalLink className="h-4 w-4" aria-hidden /> Open original
+              {d.sources && brandName(d.sources.kind) ? <BrandIcon kind={d.sources.kind} size={16} bare /> : null}
+              Open in {(d.sources && brandName(d.sources.kind)) ?? "original"}
+              <ArrowUpRight className="h-4 w-4" aria-hidden />
             </a>
           ) : null}
           <button type="button" onClick={() => patch({ status: d.status === "archived" ? "active" : "archived" }, "arch")} className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-label font-semibold text-muted hover:bg-sunken hover:text-ink">

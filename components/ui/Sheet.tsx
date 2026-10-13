@@ -101,6 +101,8 @@ export function Sheet({
 
   // Snap points only for read-only sheets: a snapped sheet is translated down, which would hide a footer's action.
   const useSnaps = !right && !footer && snapPoints && snapPoints.length > 1;
+  // One snap point is a fixed height: the sheet opens at its full size, and content (or its skeleton) loads inside it.
+  const fixedHeight = !right && snapPoints?.length === 1 && typeof snapPoints[0] === "number" ? `${snapPoints[0] * 100}dvh` : undefined;
   return (
     <Drawer.Root
       open={open}
@@ -117,7 +119,7 @@ export function Sheet({
               ? "fixed inset-y-2 right-2 z-50 flex flex-col overflow-hidden rounded-[24px] bg-raised shadow-3 outline-none ring-1 ring-line-soft"
               : "fixed inset-x-0 bottom-0 z-50 flex max-h-[96dvh] flex-col rounded-t-[28px] bg-raised shadow-3 outline-none ring-1 ring-line-soft"
           }
-          style={right ? { width: `min(${panelWidth}px, calc(100vw - 16px))` } : { height: useSnaps ? "96dvh" : undefined }}
+          style={right ? { width: `min(${panelWidth}px, calc(100vw - 16px))` } : { height: useSnaps ? "96dvh" : fixedHeight }}
         >
           {right ? (
             <div

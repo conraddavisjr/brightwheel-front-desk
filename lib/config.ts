@@ -49,6 +49,8 @@ export const config = {
     notion: {
       clientId: optional("NOTION_CLIENT_ID"),
       clientSecret: optional("NOTION_CLIENT_SECRET"),
+      /** Published Notion site for the demo pages (e.g. "acme.notion.site"), so links open the public page. */
+      publicSite: optional("NOTION_PUBLIC_SITE"),
     },
     google: {
       clientId: optional("GOOGLE_CLIENT_ID"),

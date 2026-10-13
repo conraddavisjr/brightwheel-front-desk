@@ -6,7 +6,7 @@ import { getSession } from "@/lib/session";
 import { navCounts } from "@/lib/db/operator";
 import { person, schoolForSession } from "@/lib/db/queries";
 import { SideNav, TabBar } from "@/components/operator/Nav";
-import { WheelMark } from "@/components/brand/WheelMark";
+import { WheelMark, Wordmark } from "@/components/brand/WheelMark";
 import { Avatar } from "@/components/ui/Avatar";
 import { ViewAsParent } from "@/components/operator/ViewAsParent";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -15,14 +15,9 @@ export default function OperatorLayout({ children }: LayoutProps<"/operator">) {
   return (
     <div className="min-h-dvh bg-canvas-operator lg:grid lg:grid-cols-[248px_1fr]">
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line-soft bg-surface px-3 py-4 lg:flex">
-        <div className="flex items-center justify-between pb-3">
-          <Link href="/operator" className="flex items-center gap-2 px-2">
-            <WheelMark size={26} />
-            <span className="text-[17px] font-bold tracking-[-0.02em] text-ink">brightwheel</span>
-            <span className="whitespace-nowrap rounded-full bg-accent-tint px-2 py-0.5 text-caption font-semibold text-accent">Front Desk</span>
-          </Link>
-          <ThemeToggle className="h-9 w-9" />
-        </div>
+        <Link href="/operator" aria-label="Front Desk home" className="flex items-center px-2 pb-5 pt-1">
+          <Wordmark size={20} />
+        </Link>
         <Suspense fallback={<SideNav counts={null} />}>
           <SideNavWithCounts />
         </Suspense>
@@ -68,10 +63,11 @@ async function SchoolCard() {
     <div className="rounded-[14px] bg-canvas-operator p-3 ring-1 ring-line-soft">
       <div className="flex items-center gap-2.5">
         <Avatar name={me.name} hue={me.avatar_hue} size={34} />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-label font-semibold text-ink">{me.name}</p>
           <p className="truncate text-caption text-muted">Director · {school.short_name}</p>
         </div>
+        <ThemeToggle className="-mr-1 h-9 w-9" />
       </div>
       <div className="mt-2.5 grid grid-cols-2 gap-1.5">
         <ViewAsParent school={school.slug as "sunflower-valley" | "harbor-kids"}>

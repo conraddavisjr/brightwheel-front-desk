@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, EyeOff, Lock, Check, Plus, Loader2, FileText, Sparkles, History, Users } from "lucide-react";
+import { ShieldCheck, EyeOff, Lock, Check, Plus, Loader2, FileText, Sparkles, History, Users, ChevronRight } from "lucide-react";
 import { Pill, type Tone } from "@/components/ui/Pill";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
@@ -117,28 +117,48 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
     toast({ tone: "success", title: visibility === "staff" ? "Confirmed staff-only" : "Families can search this page now", body: visibility === "family" ? "Specific details Privacy Guard found are still held." : undefined });
     router.refresh();
   }
+  // Switches flip immediately; the server copy catches up, and a failure flips it back.
+  const [ruleOverride, setRuleOverride] = useState<Record<string, boolean>>({});
+  const ruleOn = (r: RuleItem) => ruleOverride[r.id] ?? r.enabled;
   async function toggleRule(r: RuleItem) {
-    setBusy(r.id);
-    await fetch(`/api/operator/rules/${r.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ enabled: !r.enabled }) });
-    setBusy(null);
-    toast({ tone: "neutral", title: r.enabled ? `"${r.name}" is off for new content` : `"${r.name}" is on` });
+    const next = !ruleOn(r);
+    setRuleOverride((o) => ({ ...o, [r.id]: next }));
+    const res = await fetch(`/api/operator/rules/${r.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ enabled: next }) }).catch(() => null);
+    if (!res?.ok) {
+      setRuleOverride((o) => ({ ...o, [r.id]: !next }));
+      return toast({ tone: "danger", title: "That didn't save. Try again." });
+    }
+    toast({ tone: "neutral", title: next ? `"${r.name}" is on` : `"${r.name}" is off for new content` });
     router.refresh();
   }
+  const rulesOn = rules.filter(ruleOn).length;
 
-  const counts = { review: visibleHeld.length, documents: visibleDocs.length, rules: rules.filter((r) => r.enabled).length, log: log.length };
+  const tabsRef = useRef<HTMLDivElement>(null);
+  function open(t: (typeof TABS)[number]) {
+    setTab(t);
+    const list = tabsRef.current;
+    if (!list) return;
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    list.scrollIntoView({ behavior, block: "start" });
+    // On phones the tab row scrolls sideways: bring the chosen tab into view too.
+    const chip = list.querySelector<HTMLElement>(`[data-tab="${t}"]`);
+    if (chip) list.scrollTo({ left: chip.offsetLeft - list.offsetLeft - 16, behavior });
+  }
+
+  const counts = { review: visibleHeld.length, documents: visibleDocs.length, rules: rulesOn, log: log.length };
   const labels = { review: "Held for review", documents: "Kept staff-only", rules: "Protected info rules", log: "Activity" };
 
   return (
     <>
       <section className="grid grid-cols-3 gap-3">
-        <Summary icon={ShieldCheck} tint="bg-warning-tint text-warning-ink" value={visibleHeld.length + visibleDocs.length} label="Waiting for you" />
-        <Summary icon={EyeOff} tint="bg-success-tint text-success-ink" value={protectedCount} label="Details protected" />
-        <Summary icon={Lock} tint="bg-accent-tint text-accent" value={rules.filter((r) => r.enabled).length} label="Rules on" />
+        <Summary icon={ShieldCheck} tint="bg-warning-tint text-warning-ink" value={visibleHeld.length + visibleDocs.length} label="Waiting for you" onClick={() => open(visibleHeld.length || !visibleDocs.length ? "review" : "documents")} />
+        <Summary icon={EyeOff} tint="bg-success-tint text-success-ink" value={protectedCount} label="Details protected" onClick={() => open("log")} />
+        <Summary icon={Lock} tint="bg-accent-tint text-accent" value={rulesOn} label="Rules on" onClick={() => open("rules")} />
       </section>
 
-      <div role="tablist" aria-label="Privacy Guard sections" className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div ref={tabsRef} role="tablist" aria-label="Privacy Guard sections" className="scroll-mt-20 lg:scroll-mt-6 scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         {TABS.map((t) => (
-          <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`min-h-10 shrink-0 rounded-full px-3.5 text-label font-semibold ring-1 transition ${tab === t ? "bg-ink text-surface ring-ink" : "bg-surface text-muted ring-line-soft hover:text-ink"}`}>
+          <button key={t} data-tab={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`min-h-10 shrink-0 rounded-full px-3.5 text-label font-semibold ring-1 transition ${tab === t ? "bg-ink text-surface ring-ink" : "bg-surface text-muted ring-line-soft hover:text-ink"}`}>
             {labels[t]} <span className="tabular">{counts[t]}</span>
           </button>
         ))}
@@ -253,13 +273,12 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
                 <button
                   type="button"
                   role="switch"
-                  aria-checked={r.enabled}
-                  aria-label={`${r.name} ${r.enabled ? "on" : "off"}`}
-                  disabled={busy === r.id}
+                  aria-checked={ruleOn(r)}
+                  aria-label={r.name}
                   onClick={() => toggleRule(r)}
-                  className={`relative mt-0.5 h-7 w-12 shrink-0 rounded-full transition-colors ${r.enabled ? "bg-accent" : "bg-line-strong"}`}
+                  className={`relative mt-0.5 h-7 w-12 shrink-0 rounded-full transition-colors ${ruleOn(r) ? "bg-accent" : "bg-line-strong"}`}
                 >
-                  <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-1 transition-transform ${r.enabled ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+                  <span className={`absolute left-0 top-0.5 h-6 w-6 rounded-full bg-white shadow-1 transition-transform ${ruleOn(r) ? "translate-x-[22px]" : "translate-x-0.5"}`} />
                 </button>
               </li>
             ))}
@@ -292,15 +311,18 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
   );
 }
 
-function Summary({ icon: Icon, tint, value, label }: { icon: React.ComponentType<{ className?: string }>; tint: string; value: number; label: string }) {
+function Summary({ icon: Icon, tint, value, label, onClick }: { icon: React.ComponentType<{ className?: string }>; tint: string; value: number; label: string; onClick: () => void }) {
   return (
-    <div className="rounded-[16px] bg-surface p-3.5 shadow-1 ring-1 ring-line-soft sm:p-4">
-      <span className={`grid h-8 w-8 place-items-center rounded-full ${tint}`}>
-        <Icon className="h-4 w-4" aria-hidden />
+    <button type="button" onClick={onClick} className="group rounded-[16px] bg-surface p-3.5 text-left shadow-1 ring-1 ring-line-soft transition hover:ring-line-strong active:scale-[0.98] sm:p-4">
+      <span className="flex items-center justify-between">
+        <span className={`grid h-8 w-8 place-items-center rounded-full ${tint}`}>
+          <Icon className="h-4 w-4" aria-hidden />
+        </span>
+        <ChevronRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
       </span>
-      <p className="tabular mt-2.5 text-[24px] font-bold leading-tight text-ink">{value}</p>
-      <p className="text-caption text-muted">{label}</p>
-    </div>
+      <span className="tabular mt-2.5 block text-[24px] font-bold leading-tight text-ink">{value}</span>
+      <span className="block text-caption text-muted">{label}</span>
+    </button>
   );
 }
 
