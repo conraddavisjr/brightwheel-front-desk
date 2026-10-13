@@ -23,19 +23,24 @@ export async function POST(req: Request) {
     ip: clientIp(req),
   });
 
+  // A client can hang up mid-answer; after cancel, a pull that was already waiting must not write.
+  let cancelled = false;
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         const { value, done } = await events.next();
+        if (cancelled) return;
         if (done) return controller.close();
         controller.enqueue(encoder.encode(`${JSON.stringify(value)}\n`));
       } catch (err) {
+        if (cancelled) return;
         console.error("[api/ask] failed", err);
         controller.enqueue(encoder.encode(`${JSON.stringify({ type: "error", message: "Something went wrong on our side. Please try again.", retryable: true })}\n`));
         controller.close();
       }
     },
     async cancel() {
+      cancelled = true;
       await events.return(undefined);
     },
   });

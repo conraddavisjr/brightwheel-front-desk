@@ -16,7 +16,9 @@ const PAGES: Array<[string, "parent" | "director" | null]> = [
 for (const scheme of ["light", "dark"] as const) {
   for (const [path, role] of PAGES) {
     test(`${path} has no WCAG 2.2 AA violations (${scheme})`, async ({ page }) => {
-      await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+      // The OS is dark in both runs: light must still be the default, and dark is the opt-in theme.
+      await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+      if (scheme === "dark") await page.addInitScript(() => localStorage.setItem("fd:theme", "dark"));
       if (role) await signIn(page, "harbor-kids", role);
       await page.goto(path);
       await page.waitForLoadState("networkidle");

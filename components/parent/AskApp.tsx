@@ -9,6 +9,7 @@ import { useSpeechInput } from "@/lib/client/useSpeechInput";
 import { speak, stopSpeaking } from "@/lib/client/speaker";
 import { AskBar } from "@/components/parent/AskBar";
 import { AnswerView } from "@/components/parent/AnswerView";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { VoiceOverlay } from "@/components/parent/VoiceOverlay";
 import { SourcesSheet } from "@/components/parent/SourcesSheet";
 import { MessageStaffSheet } from "@/components/parent/MessageStaffSheet";
@@ -219,6 +220,7 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
             Front Desk · {school.openNow.label}
           </p>
         </div>
+        <ThemeToggle className="-mr-2" />
         <Link href="/" aria-label="Switch perspective" className="grid h-11 w-11 place-items-center rounded-full text-muted hover:bg-sunken hover:text-ink">
           <LogOut className="h-5 w-5" aria-hidden />
         </Link>

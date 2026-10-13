@@ -8,7 +8,7 @@ import { searchKnowledge, type Retrieval } from "@/lib/retrieval/search";
 import { generateAnswer } from "@/lib/answer/generate";
 import { openerFor, utteranceKind, looksSpanish } from "@/lib/answer/fillers";
 import { routeCard, type SchoolContact } from "@/lib/answer/routeReplies";
-import { hoursFacts, openNow, type WeeklyHours } from "@/lib/answer/hours";
+import { asksForHours, hoursFacts, openNow, type WeeklyHours } from "@/lib/answer/hours";
 import { detect } from "@/lib/privacy/detect";
 import { notifyGap } from "@/lib/integrations/slack";
 import type { AnswerCard, AskEvent, ModelAnswer } from "@/lib/schemas";
@@ -136,11 +136,7 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   }
 
   // Hours are answered from structured data, with the handbook as backup context.
-  const isHours =
-    Object.keys(school.hours).length > 0 &&
-    !/\bper hour\b|\ban hour\b|\bhourly\b/i.test(question) &&
-    /\b(open|opens|close|closes|closing|opening|what are your hours|hours of operation|business hours|what time do you|abren|cierran|horario)\b/i.test(question) &&
-    !/\b(holiday|thanksgiving|christmas|break|closed (on|for)|closure)\b/i.test(question);
+  const isHours = Object.keys(school.hours).length > 0 && asksForHours(question);
 
   if (isHours) {
     // Opening hours are structured data the director owns: answered in code, instantly, never by a model.

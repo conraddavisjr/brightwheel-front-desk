@@ -84,52 +84,51 @@
   initial-value: 210deg;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --canvas: #0f1120;
-    --canvas-operator: #0f1120;
-    --surface: #15172b;
-    --surface-raised: #1b1f38;
-    --surface-sunken: #0b0d19;
-    --ink: #e6e8f5;
-    --ink-strong: #f3f4fb;
-    --ink-muted: #9ea3b8;
-    --ink-placeholder: #7c8199;
-    --border: #2d3356;
-    --border-soft: #22274a;
-    --border-strong: #3d4470;
-    --accent: #8f9bff;
-    --accent-hover: #a3adff;
-    --accent-pressed: #b1baff;
-    --accent-tint: #232848;
-    --accent-tint-2: #1a1e38;
-    --on-accent: #0f1120;
-    --focus: #8f9bff;
-    --focus-halo: rgba(143, 155, 255, 0.35);
-    --success-ink: #6ee0a0;
-    --success-tint: #16302a;
-    --warning-ink: #ffd966;
-    --warning-tint: #332b12;
-    --danger-ink: #ff8a8f;
-    --danger-tint: #3a1a22;
-    --info-ink: #7cc4ff;
-    --info-tint: #132b44;
-    --ai-ink: #b98cff;
-    --ai-tint: #241b3d;
-    --teal-ink: #6fe0e2;
-    --teal-tint: #12302f;
-    --pink-ink: #ff8fc1;
-    --pink-tint: #3a1a2b;
-    --orange-ink: #ffc06e;
-    --orange-tint: #33240f;
-    --chart-1: #6f7ceb;
-    --chart-2: #c9731c;
-    --chart-grid: #22274a;
-    --shadow-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    --shadow-2: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 24px rgba(0, 0, 0, 0.35);
-    --shadow-3: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 16px 48px rgba(0, 0, 0, 0.5);
-  }
+/* Dark is an opt-in theme (brightwheel itself is light): set by ThemeToggle, applied before paint. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #0f1120;
+  --canvas-operator: #0f1120;
+  --surface: #15172b;
+  --surface-raised: #1b1f38;
+  --surface-sunken: #0b0d19;
+  --ink: #e6e8f5;
+  --ink-strong: #f3f4fb;
+  --ink-muted: #9ea3b8;
+  --ink-placeholder: #7c8199;
+  --border: #2d3356;
+  --border-soft: #22274a;
+  --border-strong: #3d4470;
+  --accent: #8f9bff;
+  --accent-hover: #a3adff;
+  --accent-pressed: #b1baff;
+  --accent-tint: #232848;
+  --accent-tint-2: #1a1e38;
+  --on-accent: #0f1120;
+  --focus: #8f9bff;
+  --focus-halo: rgba(143, 155, 255, 0.35);
+  --success-ink: #6ee0a0;
+  --success-tint: #16302a;
+  --warning-ink: #ffd966;
+  --warning-tint: #332b12;
+  --danger-ink: #ff8a8f;
+  --danger-tint: #3a1a22;
+  --info-ink: #7cc4ff;
+  --info-tint: #132b44;
+  --ai-ink: #b98cff;
+  --ai-tint: #241b3d;
+  --teal-ink: #6fe0e2;
+  --teal-tint: #12302f;
+  --pink-ink: #ff8fc1;
+  --pink-tint: #3a1a2b;
+  --orange-ink: #ffc06e;
+  --orange-tint: #33240f;
+  --chart-1: #6f7ceb;
+  --chart-2: #c9731c;
+  --chart-grid: #22274a;
+  --shadow-1: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-2: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-3: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
@@ -432,14 +431,12 @@
     radial-gradient(35% 45% at 75% 30%, #ffedf5 0%, transparent 70%),
     radial-gradient(30% 40% at 55% 70%, #e4f8f8 0%, transparent 70%);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .hero-glow {
-    opacity: 0.45;
-    background:
-      radial-gradient(40% 50% at 30% 40%, #37458a 0%, transparent 70%),
-      radial-gradient(35% 45% at 75% 30%, #5524ae 0%, transparent 70%),
-      radial-gradient(30% 40% at 55% 70%, #057577 0%, transparent 70%);
-  }
+:root[data-theme="dark"] .hero-glow {
+  opacity: 0.45;
+  background:
+    radial-gradient(40% 50% at 30% 40%, #37458a 0%, transparent 70%),
+    radial-gradient(35% 45% at 75% 30%, #5524ae 0%, transparent 70%),
+    radial-gradient(30% 40% at 55% 70%, #057577 0%, transparent 70%);
 }
 
 /* Vaul drawer polish */

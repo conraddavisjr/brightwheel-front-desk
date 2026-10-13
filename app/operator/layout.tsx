@@ -9,16 +9,20 @@ import { SideNav, TabBar } from "@/components/operator/Nav";
 import { WheelMark } from "@/components/brand/WheelMark";
 import { Avatar } from "@/components/ui/Avatar";
 import { ViewAsParent } from "@/components/operator/ViewAsParent";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function OperatorLayout({ children }: LayoutProps<"/operator">) {
   return (
     <div className="min-h-dvh bg-canvas-operator lg:grid lg:grid-cols-[248px_1fr]">
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line-soft bg-surface px-3 py-4 lg:flex">
-        <Link href="/operator" className="flex items-center gap-2 px-2 pb-5">
-          <WheelMark size={26} />
-          <span className="text-[17px] font-bold tracking-[-0.02em] text-ink">brightwheel</span>
-          <span className="whitespace-nowrap rounded-full bg-accent-tint px-2 py-0.5 text-caption font-semibold text-accent">Front Desk</span>
-        </Link>
+        <div className="flex items-center justify-between pb-3">
+          <Link href="/operator" className="flex items-center gap-2 px-2">
+            <WheelMark size={26} />
+            <span className="text-[17px] font-bold tracking-[-0.02em] text-ink">brightwheel</span>
+            <span className="whitespace-nowrap rounded-full bg-accent-tint px-2 py-0.5 text-caption font-semibold text-accent">Front Desk</span>
+          </Link>
+          <ThemeToggle className="h-9 w-9" />
+        </div>
         <Suspense fallback={<SideNav counts={null} />}>
           <SideNavWithCounts />
         </Suspense>
@@ -88,6 +92,7 @@ async function MobileHeader() {
     <header className="sticky top-0 z-20 flex items-center gap-2.5 border-b border-line-soft bg-surface/90 px-4 py-2.5 backdrop-blur-xl lg:hidden">
       <WheelMark size={24} />
       <p className="min-w-0 flex-1 truncate text-dense font-semibold text-ink">{school.name}</p>
+      <ThemeToggle className="h-9 w-9" />
       <ViewAsParent school={school.slug as "sunflower-valley" | "harbor-kids"} compact>
         <Eye className="h-4 w-4" aria-hidden /> Parent view
       </ViewAsParent>

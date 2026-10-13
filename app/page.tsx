@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpenCheck, CalendarDays, MessageCircleQuestion, ShieldCheck, Sparkles, Mic, Inbox, PlugZap } from "lucide-react";
 import { Wordmark } from "@/components/brand/WheelMark";
 import { SignInButton } from "@/components/landing/SignInButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Pill } from "@/components/ui/Pill";
 import { Disclaimer } from "@/components/brand/Disclaimer";
 
@@ -11,9 +12,12 @@ export default function Landing() {
       <div aria-hidden className="hero-glow pointer-events-none absolute inset-x-0 -top-40 h-[520px] blur-3xl" />
       <header className="relative mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Wordmark />
-        <Link href="#how" className="rounded-full px-3 py-2 text-label font-semibold text-muted hover:text-ink">
-          How it works
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link href="#how" className="rounded-full px-3 py-2 text-label font-semibold text-muted hover:text-ink">
+            How it works
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="relative mx-auto max-w-6xl px-4 pb-16 sm:px-6">

@@ -3,6 +3,7 @@ import { Figtree } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ServiceWorker } from "@/components/brand/ServiceWorker";
+import { THEME_COLOR, themeInitScript } from "@/lib/client/theme";
 
 const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"], display: "swap" });
 
@@ -20,15 +21,17 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f9ff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1120" },
-  ],
+  // Light by default; ThemeToggle swaps this when someone picks dark.
+  themeColor: THEME_COLOR.light,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${figtree.variable} h-full antialiased`}>
+    // The inline script may set data-theme before React hydrates.
+    <html lang="en" className={`${figtree.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full">
         <ToastProvider>{children}</ToastProvider>
         <ServiceWorker />

@@ -57,3 +57,21 @@ export function hoursFacts(hours: WeeklyHours): Array<{ label: string; value: st
   }
   return rows.map((r) => ({ label: r.from === r.to ? DAY_NAMES[r.from] : `${DAY_NAMES[r.from]} - ${DAY_NAMES[r.to]}`, value: r.value }));
 }
+
+/**
+ * Does the question ask when the school is open? Matched on intent words, not
+ * fixed phrases, so "operating hours", "your hours" and "when do you open" all
+ * land on the structured answer. Durations ("how many hours", "per hour") and
+ * one-off closures (holidays, breaks) are left to search.
+ */
+export function asksForHours(question: string): boolean {
+  const q = question.toLowerCase();
+  if (/\bper hour\b|\ban hour\b|\bhourly\b|\bhow many hours\b|\bhours? (a|per|each) (day|week)\b/.test(q)) return false;
+  if (/\b(holiday|thanksgiving|christmas|break|closed (on|for)|closure|closures|snow|weather)\b/.test(q)) return false;
+  return (
+    /\b(open|opens|close|closes|closing|opening|what time do you|abren|cierran|horario)\b/.test(q) ||
+    /\bhours of operation\b/.test(q) ||
+    /\b(your|school|school's|center|center's|centre|daycare|operating|opening|business|office|regular|normal|daily|weekday)\s+hours\b/.test(q) ||
+    /^\W*(what are (the|your)\s+)?hours\W*$/.test(q)
+  );
+}

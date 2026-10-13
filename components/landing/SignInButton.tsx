@@ -1,38 +1,31 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
+import { signInAs } from "@/lib/demo/actions";
+import type { DemoRole, DemoSchool } from "@/lib/demo/signIn";
 
-/** One-tap demo sign-in. Prefetches the destination so the switch feels instant. */
+/** One-tap demo sign-in. The Server Action sets the session and redirects in one round trip. */
 export function SignInButton({
   school,
   role,
   children,
   variant = "primary",
 }: {
-  school: "sunflower-valley" | "harbor-kids";
-  role: "director" | "parent";
+  school: DemoSchool;
+  role: DemoRole;
   children: ReactNode;
   variant?: "primary" | "secondary";
 }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const dest = role === "director" ? "/operator" : "/ask";
 
-  async function go() {
-    setBusy(true);
+  function go() {
     setError(null);
-    try {
-      const res = await fetch("/api/demo/signin", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ school, role }) });
-      const json = (await res.json()) as { redirect?: string; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Could not sign in.");
-      router.push(json.redirect ?? dest);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not sign in.");
-      setBusy(false);
-    }
+    startTransition(async () => {
+      const result = await signInAs(school, role).catch(() => ({ error: "Could not sign in. Check your connection and try again." }));
+      if (result?.error) setError(result.error);
+    });
   }
 
   const base =
@@ -43,9 +36,9 @@ export function SignInButton({
       : "bg-surface text-ink ring-1 ring-line hover:ring-line-strong hover:bg-accent-tint-2";
   return (
     <div>
-      <button type="button" onClick={go} onMouseEnter={() => router.prefetch(dest)} disabled={busy} className={`${base} ${look}`}>
+      <button type="button" onClick={go} disabled={pending} className={`${base} ${look}`}>
         <span>{children}</span>
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />}
+        {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />}
       </button>
       {error ? (
         <p role="alert" className="mt-2 text-label text-danger-ink">
