@@ -5,6 +5,7 @@ import { signIn } from "./support";
 const PAGES: Array<[string, "parent" | "director" | null]> = [
   ["/", null],
   ["/ask", "parent"],
+  ["/ask/chat", "parent"],
   ["/operator", "director"],
   ["/operator/inbox", "director"],
   ["/operator/conversations", "director"],

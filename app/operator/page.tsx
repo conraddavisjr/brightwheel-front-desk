@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowRight, ArrowUpRight, ArrowDownRight, MessageCircleQuestion, ShieldCheck, Sparkles, ThumbsUp, Clock, Bot, FileText, Inbox } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ArrowDownRight, MessageCircleQuestion, ShieldCheck, Sparkles, ThumbsUp, Clock, Bot, FileText, Inbox, CheckCircle2 } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { computeStats, navCounts, openGaps, recentMessages } from "@/lib/db/operator";
@@ -12,6 +12,7 @@ import { UsageChart } from "@/components/operator/UsageChart";
 import { IntegrationTiles } from "@/components/operator/IntegrationTiles";
 import { Pill } from "@/components/ui/Pill";
 import { PageHeader, Panel } from "@/components/operator/Panel";
+import { SchoolLogo } from "@/components/brand/SchoolLogo";
 import { TOPIC_LABEL, OUTCOME_PILL } from "@/components/operator/labels";
 
 export const metadata: Metadata = { title: "Home" };
@@ -39,7 +40,7 @@ async function director() {
 async function Greeting() {
   const s = await director();
   const [me, school] = await Promise.all([person(s.personId), schoolForSession(s)]);
-  return <PageHeader title={`Welcome back, ${me.name.split(" ")[0]}`} subtitle={`Here's how Front Desk helped ${school.short_name} families in the last 30 days.`} />;
+  return <PageHeader leading={<SchoolLogo slug={school.slug} size={80} fill className="shadow-1" />} title={`Welcome back, ${me.name.split(" ")[0]}`} subtitle={`Here's how Front Desk helped ${school.short_name} families in the last 30 days.`} />;
 }
 
 function HomeSkeleton() {
@@ -67,6 +68,7 @@ async function Dashboard() {
   const st = computeStats(msgs, 30, school.timezone);
   const open = gaps.filter((g) => g.status === "open");
   const hot = open.filter((g) => g.kind === "question").sort((a, b) => b.ask_count - a.ask_count)[0];
+  const conflicts = open.filter((g) => g.kind === "conflict");
   const pct = (x: number) => `${Math.round(x * 100)}%`;
 
   return (
@@ -100,10 +102,16 @@ async function Dashboard() {
         </Panel>
         <Panel title="Needs your attention">
           <ul className="space-y-2">
-            <Attention href="/operator/inbox" icon={Inbox} tint="bg-accent-tint text-accent" count={counts.gaps} label="Questions without an answer" />
-            <Attention href="/operator/privacy" icon={ShieldCheck} tint="bg-warning-tint text-warning-ink" count={counts.held} label="Items held by Privacy Guard" />
-            <Attention href="/operator/inbox" icon={FileText} tint="bg-orange-tint text-orange-ink" count={open.filter((g) => g.kind === "conflict").length} label="Documents that disagree" />
+            {/* Only what needs a decision: a zero here isn't an action. */}
+            {counts.questions ? <Attention href="/operator/inbox" icon={Inbox} tint="bg-accent-tint text-accent" count={counts.questions} label="Questions without an answer" /> : null}
+            {counts.privacy ? <Attention href="/operator/privacy" icon={ShieldCheck} tint="bg-warning-tint text-warning-ink" count={counts.privacy} label="Waiting in Privacy Guard" /> : null}
+            {conflicts.length ? <Attention href={conflicts.length === 1 ? `/operator/inbox?gap=${conflicts[0].id}` : "/operator/inbox?kind=conflict"} icon={FileText} tint="bg-orange-tint text-orange-ink" count={conflicts.length} label="Documents that disagree" /> : null}
           </ul>
+          {!counts.questions && !counts.privacy && !conflicts.length ? (
+            <p className="flex items-center gap-2.5 rounded-[14px] bg-success-tint p-3 text-dense font-medium text-success-ink">
+              <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden /> All caught up. Nothing needs you right now.
+            </p>
+          ) : null}
           <p className="mt-4 text-caption text-muted">
             Median answer time <span className="tabular font-semibold text-ink">{st.medianLatencyMs ? `${(st.medianLatencyMs / 1000).toFixed(1)}s` : "-"}</span> · {st.declined} unsafe requests declined
           </p>

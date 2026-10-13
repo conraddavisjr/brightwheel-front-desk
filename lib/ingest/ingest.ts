@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { db, must, ok } from "@/lib/db/client";
 import { embedTexts, toPgVector } from "@/lib/ai/provider";
 import { chunkMarkdown } from "@/lib/retrieval/chunk";
+import { forgetFollowUps } from "@/lib/answer/followUpCache";
 import { detect, mask, mergeFindings, suggestVisibility } from "@/lib/privacy/detect";
 import { classifySensitive } from "@/lib/privacy/classify";
 import type { Finding } from "@/lib/schemas";
@@ -68,6 +69,7 @@ export async function schoolPrivacyContext(schoolId: string): Promise<SchoolCtx>
 
 export async function ingestDocument(input: IngestInput, opts: { force?: boolean; ctx?: SchoolCtx } = {}): Promise<IngestResult> {
   const client = db();
+  forgetFollowUps(input.schoolId);
   const content = input.content.replace(/\r\n/g, "\n").trim();
   const hash = sha(`${input.title}\n${content}`);
 
@@ -174,6 +176,7 @@ export async function reindexDocument(documentId: string): Promise<number> {
     "document",
   );
   await client.from("chunks").delete().eq("document_id", documentId);
+  forgetFollowUps(doc.school_id);
   if (doc.visibility !== "family" || doc.status !== "active") return 0;
 
   const findings = must(

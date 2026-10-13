@@ -407,6 +407,35 @@
   }
 }
 
+/* The How-it-works banner's step timer: a bar that fills, then advances the step. */
+.banner-progress {
+  animation-name: banner-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes banner-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* An unread staff reply on the parent's home: a soft, slow glow in the accent. */
+.reply-glow {
+  animation: reply-glow 2.8s ease-in-out infinite;
+}
+@keyframes reply-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 0%, transparent), var(--shadow-2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--accent) 16%, transparent), var(--shadow-2);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -419,7 +448,8 @@
   .pulse-dot::after,
   .shimmer,
   .shimmer-ai,
-  .glow-breathe {
+  .glow-breathe,
+  .reply-glow {
     animation: none !important;
   }
 }

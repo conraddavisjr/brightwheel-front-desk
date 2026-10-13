@@ -20,6 +20,7 @@ import { normalizeQuestion, topicOf } from "@/lib/guard/router";
 import { zonedMidnight } from "@/lib/time";
 import { searchKnowledge } from "@/lib/retrieval/search";
 import { config } from "@/lib/config";
+import { manualSource } from "@/lib/operator/manualSource";
 
 const ROOT = join(process.cwd(), "seed");
 
@@ -30,6 +31,15 @@ function originalUrl(slug: string, file: string): string | null {
   if (link?.notion) return config.integrations.notion.publicSite ? `https://${config.integrations.notion.publicSite}/${link.notion}` : `https://www.notion.so/${link.notion}`;
   if (link?.doc) return `https://docs.google.com/document/d/${link.doc}/view`;
   if (link?.sheet) return `https://docs.google.com/spreadsheets/d/${link.sheet}/view`;
+  return null;
+}
+
+/** The real workspace behind a demo source, so its name on Sources links out. */
+function sourceLink(slug: string, kind: string): string | null {
+  const ids = (LINKS["$sources"] as unknown as Record<string, Record<string, string>>)[slug] ?? {};
+  if (kind === "notion" && ids.notion) return config.integrations.notion.publicSite ? `https://${config.integrations.notion.publicSite}/${ids.notion}` : `https://www.notion.so/${ids.notion}`;
+  if (kind === "drive" && ids.drive) return `https://drive.google.com/drive/folders/${ids.drive}`;
+  if ((kind === "ical" || kind === "calendar") && ids.calendar) return `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(ids.calendar)}&ctz=America%2FLos_Angeles`;
   return null;
 }
 
@@ -171,7 +181,7 @@ async function main() {
     const ctx = await schoolPrivacyContext(schoolId);
     for (const s of def.sources) {
       const source = must(
-        await client.from("sources").insert({ school_id: schoolId, kind: s.kind, name: s.name, account_label: s.account_label, status: "connected", config: { demo: true }, last_synced_at: new Date().toISOString() }).select("id").single(),
+        await client.from("sources").insert({ school_id: schoolId, kind: s.kind, name: s.name, account_label: s.account_label, status: "connected", config: { demo: true, link: sourceLink(def.slug, s.kind) }, last_synced_at: new Date().toISOString() }).select("id").single(),
         "source",
       );
       const dir = join(ROOT, def.slug, s.dir);
@@ -222,7 +232,7 @@ async function main() {
     const calSource = must(
       await client
         .from("sources")
-        .insert({ school_id: schoolId, kind: def.calendar.kind, name: def.calendar.name, account_label: def.calendar.account_label, status: "connected", config: { url: `${process.env.APP_URL ?? "http://localhost:3000"}/demo/${def.slug}/calendar.ics` }, last_synced_at: new Date().toISOString() })
+        .insert({ school_id: schoolId, kind: def.calendar.kind, name: def.calendar.name, account_label: def.calendar.account_label, status: "connected", config: { url: `${process.env.APP_URL ?? "http://localhost:3000"}/demo/${def.slug}/calendar.ics`, link: sourceLink(def.slug, def.calendar.kind) }, last_synced_at: new Date().toISOString() })
         .select("id")
         .single(),
       "calendar source",
@@ -248,7 +258,7 @@ async function main() {
     console.log(`  ${def.short_name} · calendar: ${cal.events.length} events`);
 
     await seedHistory(schoolId, parents, def.slug === "harbor-kids" ? 2 : 1);
-    void director;
+    await seedPersona(schoolId, def.slug, parents, director.id, ctx);
   }
   console.log("Done.");
 }
@@ -350,6 +360,74 @@ async function seedHistory(schoolId: string, parents: Array<{ id: string; name: 
     "gaps",
   );
   console.log(`  history: ${convRows.length} conversations, ${gapCounts.size} open gaps`);
+}
+
+/**
+ * The parent you enter the demo as gets a lived-in home screen: a question the
+ * director already answered (published as a knowledge page, like the Inbox
+ * does), a quick thread with staff, and two things still waiting.
+ */
+const PERSONAS: Record<string, { name: string; answered: { q: string; title: string; a: string }; thread: { ask: string; reply: string }; pendingGap: string; pendingMessage: string }> = {
+  "harbor-kids": {
+    name: "Maya Chen-Ortiz",
+    answered: { q: "Can grandparents visit for lunch?", title: "Grandparents at lunch", a: "Yes! Grandparents are welcome to join lunch on Fridays from 11:30 to 12:15. Please sign in at the front desk with ID, and let your child's teachers know the day before so we can set an extra place." },
+    thread: { ask: "Lucas has a dentist appointment Thursday morning, so he'll arrive around 10:30.", reply: "Thanks for the heads up, Maya! We'll save Lucas a snack and see him at 10:30." },
+    pendingGap: "Do you offer a summer camp?",
+    pendingMessage: "Could Lucas move up to the Otters room in January? He's been talking about it nonstop.",
+  },
+  "sunflower-valley": {
+    name: "Priya Raman",
+    answered: { q: "Can we bring cupcakes for a birthday?", title: "Birthday treats", a: "Yes, birthday treats are welcome! Please bring store-bought treats with the ingredient label, and tell your child's teacher two days ahead. We serve them at afternoon snack." },
+    thread: { ask: "Leo's grandma will pick him up on Friday. She's already on our pickup list.", reply: "Got it, thanks Priya! We'll check her ID at pickup. Have a great weekend." },
+    pendingGap: "Do you offer a summer camp?",
+    pendingMessage: "Is there space for Leo to move up to the Blossoms room in March?",
+  },
+};
+
+async function seedPersona(schoolId: string, slug: string, parents: Array<{ id: string; name: string }>, directorId: string, ctx: Awaited<ReturnType<typeof schoolPrivacyContext>>) {
+  const client = db();
+  const def = PERSONAS[slug];
+  const me = parents.find((p) => p.name === def.name);
+  if (!def || !me) return;
+  const hours = (h: number) => new Date(Date.now() - h * 3600000).toISOString();
+
+  // A question the director answered yesterday: published to knowledge, the family notified.
+  const page = await ingestDocument(
+    { schoolId, sourceId: await manualSource(schoolId), externalId: `answer:${normalizeQuestion(def.answered.q)}`, title: def.answered.title, content: `# ${def.answered.title}\n\n${def.answered.a}`, emoji: "💬", parentTitle: null, url: null, mime: "text/markdown", sourceUpdatedAt: hours(20) },
+    { ctx },
+  );
+  const answered = { status: "answered", answer: def.answered.a, answer_document_id: page.documentId, answered_by: directorId, answered_at: hours(20), notified_at: hours(20) };
+  const { data: existing } = await client.from("gaps").select("id,asker_ids").eq("school_id", schoolId).eq("normalized", normalizeQuestion(def.answered.q)).maybeSingle();
+  if (existing) ok(await client.from("gaps").update({ ...answered, asker_ids: [...new Set([...existing.asker_ids, me.id])] }).eq("id", existing.id), "answered gap");
+  else ok(await client.from("gaps").insert({ school_id: schoolId, question: def.answered.q, normalized: normalizeQuestion(def.answered.q), topic: topicOf(def.answered.q), asker_ids: [me.id], first_asked_at: hours(30), last_asked_at: hours(30), ...answered }), "answered gap");
+
+  // Still waiting: an open question and a message to staff.
+  const { data: open } = await client.from("gaps").select("id,asker_ids").eq("school_id", schoolId).eq("normalized", normalizeQuestion(def.pendingGap)).maybeSingle();
+  if (open) ok(await client.from("gaps").update({ asker_ids: [...new Set([...open.asker_ids, me.id])], last_asked_at: hours(3) }).eq("id", open.id), "pending gap");
+  else ok(await client.from("gaps").insert({ school_id: schoolId, question: def.pendingGap, normalized: normalizeQuestion(def.pendingGap), topic: topicOf(def.pendingGap), asker_ids: [me.id], first_asked_at: hours(3), last_asked_at: hours(3) }), "pending gap");
+
+  // Each ask lives in its own conversation, the way the app records them.
+  const thread = crypto.randomUUID();
+  const waiting = crypto.randomUUID();
+  const asked = crypto.randomUUID();
+  ok(
+    await client.from("conversations").insert([
+      { id: thread, school_id: schoolId, parent_id: me.id, channel: "text", started_at: hours(50), last_at: hours(49) },
+      { id: waiting, school_id: schoolId, parent_id: me.id, channel: "text", started_at: hours(5), last_at: hours(5) },
+      { id: asked, school_id: schoolId, parent_id: me.id, channel: "text", started_at: hours(30), last_at: hours(30) },
+    ]),
+    "persona conversations",
+  );
+  ok(
+    await client.from("messages").insert([
+      { conversation_id: thread, school_id: schoolId, role: "parent", text: def.thread.ask, reason: "to_staff", author_id: me.id, citations: [], created_at: hours(50) },
+      { conversation_id: thread, school_id: schoolId, role: "staff", text: def.thread.reply, reason: "staff_reply", author_id: directorId, citations: [], created_at: hours(49) },
+      { conversation_id: waiting, school_id: schoolId, role: "parent", text: def.pendingMessage, reason: "to_staff", author_id: me.id, citations: [], created_at: hours(5) },
+      { conversation_id: asked, school_id: schoolId, role: "parent", text: def.answered.q, author_id: me.id, citations: [], created_at: hours(30) },
+      { conversation_id: asked, school_id: schoolId, role: "assistant", text: "I don't have that yet. I've passed your question to the front desk.", outcome: "unsure", reason: "seed_history", topic: topicOf(def.answered.q), citations: [], created_at: new Date(Date.now() - 30 * 3600000 + 2000).toISOString() },
+    ]),
+    "persona messages",
+  );
 }
 
 main().catch((err) => {

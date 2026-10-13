@@ -29,12 +29,12 @@ async function Data() {
   const client = db();
   const [findings, docs, rules, log, people] = await Promise.all([
     client.from("findings").select("id,document_id,category,label,span_start,span_end,excerpt,detector,confidence,reason,status").eq("school_id", s.schoolId),
-    client.from("documents").select("id,title,content,visibility,visibility_reason,visibility_set_by,visibility_reviewed,status,sources(kind)").eq("school_id", s.schoolId),
+    client.from("documents").select("id,title,url,content,visibility,visibility_reason,visibility_set_by,visibility_reviewed,status,sources(kind)").eq("school_id", s.schoolId),
     client.from("privacy_rules").select("id,name,description,category,pattern,preset,enabled,created_at").eq("school_id", s.schoolId).order("created_at"),
     client.from("audit_log").select("id,action,detail,at,actor_id").eq("school_id", s.schoolId).order("at", { ascending: false }).limit(40),
     client.from("people").select("id,name").eq("school_id", s.schoolId).neq("role", "parent"),
   ]);
-  const docMap = new Map((must(docs, "documents") as unknown as Array<{ id: string; title: string; content: string; visibility: string; visibility_reason: string | null; visibility_set_by: string; visibility_reviewed: boolean; status: string; sources: { kind: string } | null }>).map((d) => [d.id, d]));
+  const docMap = new Map((must(docs, "documents") as unknown as Array<{ id: string; title: string; url: string | null; content: string; visibility: string; visibility_reason: string | null; visibility_set_by: string; visibility_reviewed: boolean; status: string; sources: { kind: string } | null }>).map((d) => [d.id, d]));
   const all = must(findings, "findings") as Array<{ id: string; document_id: string; category: string; label: string; span_start: number; span_end: number; excerpt: string; detector: string; confidence: number; reason: string | null; status: string }>;
 
   const held: HeldItem[] = all
@@ -45,6 +45,7 @@ async function Data() {
         id: f.id,
         documentId: d.id,
         documentTitle: d.title,
+        documentUrl: d.url,
         sourceKind: d.sources?.kind ?? "manual",
         category: f.category,
         label: f.label,
@@ -60,6 +61,7 @@ async function Data() {
     .map((d) => ({
       id: d.id,
       title: d.title,
+      url: d.url,
       reason: d.visibility_reason,
       sourceKind: d.sources?.kind ?? "manual",
       count: all.filter((f) => f.document_id === d.id).length,

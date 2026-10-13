@@ -1,19 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { CategoryPicker } from "@/components/operator/CategoryPicker";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, EyeOff, Lock, Check, Plus, Loader2, FileText, Sparkles, History, Users, ChevronRight } from "lucide-react";
+import { ShieldCheck, EyeOff, Lock, Check, Plus, Loader2, FileText, Sparkles, History, Users, ChevronRight, ArrowUpRight } from "lucide-react";
 import { Pill, type Tone } from "@/components/ui/Pill";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
-import { BrandIcon } from "@/components/operator/BrandIcon";
-import { ago } from "@/components/operator/IntegrationTiles";
-import { CATEGORY_LABEL, PRIVACY_CATEGORIES, type PrivacyCategory } from "@/lib/schemas";
+import { BrandIcon, brandName } from "@/components/operator/BrandIcon";
+import { ago } from "@/lib/time";
+import { CATEGORY_LABEL, type PrivacyCategory } from "@/lib/schemas";
 
 export interface HeldItem {
   id: string;
   documentId: string;
   documentTitle: string;
+  /** The original in Notion or Drive, when there is one. */
+  documentUrl: string | null;
   sourceKind: string;
   category: string;
   label: string;
@@ -26,6 +29,7 @@ export interface HeldItem {
 export interface QuarantinedDoc {
   id: string;
   title: string;
+  url: string | null;
   reason: string | null;
   sourceKind: string;
   count: number;
@@ -181,7 +185,7 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
               <article key={h.id} className="rise-in rounded-[16px] bg-surface p-4 shadow-1 ring-1 ring-line-soft sm:p-5">
                 <header className="flex flex-wrap items-center gap-2">
                   <BrandIcon kind={h.sourceKind} size={28} />
-                  <span className="min-w-0 truncate text-dense font-semibold text-ink">{h.documentTitle}</span>
+                  <SourceTitle title={h.documentTitle} url={h.documentUrl} kind={h.sourceKind} className="min-w-0 truncate text-dense font-semibold text-ink" />
                   <Pill tone={CAT_TONE[h.category] ?? "neutral"} className="ml-auto">{CATEGORY_LABEL[h.category as PrivacyCategory] ?? h.label}</Pill>
                 </header>
                 <p className="mt-3 rounded-[12px] bg-canvas p-3.5 text-dense leading-7 text-muted ring-1 ring-line-soft">
@@ -224,7 +228,9 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
                 <div className="flex items-start gap-3">
                   <BrandIcon kind={d.sourceKind} size={36} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-headline font-semibold text-ink">{d.title}</p>
+                    <p className="text-headline font-semibold text-ink">
+                      <SourceTitle title={d.title} url={d.url} kind={d.sourceKind} />
+                    </p>
                     <p className="mt-0.5 text-dense text-muted">{d.reason ?? "It looks like a records file, not family information."}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {d.categories.slice(0, 4).map((c) => (
@@ -352,19 +358,18 @@ function AddRuleSheet({ open, onClose }: { open: boolean; onClose: () => void })
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<PrivacyCategory>("custom");
-  const [pattern, setPattern] = useState("");
-  const [advanced, setAdvanced] = useState(false);
   const [busy, setBusy] = useState(false);
+  const kindLabel = useId();
   async function save() {
     setBusy(true);
-    const res = await fetch("/api/operator/rules", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, description, category, pattern: pattern || undefined }) });
+    const res = await fetch("/api/operator/rules", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, description, category }) });
     const j = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) return toast({ tone: "danger", title: j.error ?? "Couldn't add the rule." });
     toast({ tone: "success", title: "Rule added. Your redaction list is updated.", body: j.held ? `It found ${j.held} item${j.held > 1 ? "s" : ""} in existing documents, now held for review.` : "Nothing in your current documents matches. New content will be checked." });
     setName("");
     setDescription("");
-    setPattern("");
+    setCategory("custom");
     onClose();
     router.refresh();
   }
@@ -391,29 +396,29 @@ function AddRuleSheet({ open, onClose }: { open: boolean; onClose: () => void })
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder={'Anything mentioning "Project Falcon" or "second campus"'} className="mt-1.5 w-full rounded-[12px] bg-surface p-3.5 text-body text-ink ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-accent" />
           <span className="mt-1 block text-caption text-muted">Put exact words in quotes. With AI review on, the description itself also guides the check.</span>
         </label>
-        <label className="block">
-          <span className="text-label font-semibold text-ink">Kind of information</span>
-          <select value={category} onChange={(e) => setCategory(e.target.value as PrivacyCategory)} className="mt-1.5 h-11 w-full rounded-[10px] bg-surface px-3 text-body text-ink ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-accent">
-            {PRIVACY_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {CATEGORY_LABEL[c]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="button" onClick={() => setAdvanced((a) => !a)} className="min-h-9 text-label font-semibold text-accent">
-          {advanced ? "Hide" : "Add an exact pattern (advanced)"}
-        </button>
-        {advanced ? (
-          <label className="block">
-            <span className="text-label font-semibold text-ink">Pattern (regular expression)</span>
-            <input value={pattern} onChange={(e) => setPattern(e.target.value)} placeholder="\\bPF-\\d{4}\\b" className="mt-1.5 h-11 w-full rounded-[10px] bg-surface px-3.5 font-mono text-dense text-ink ring-1 ring-line-strong outline-none focus:ring-2 focus:ring-accent" />
-          </label>
-        ) : null}
+        <div>
+          <span id={kindLabel} className="text-label font-semibold text-ink">
+            Kind of information
+          </span>
+          <CategoryPicker value={category} onChange={setCategory} labelId={kindLabel} />
+        </div>
         <p className="flex items-start gap-2 rounded-[12px] bg-sunken p-3 text-caption text-muted">
           <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden /> Turning a rule off later never releases anything it already held. That stays your call, item by item.
         </p>
       </div>
     </Sheet>
+  );
+}
+
+/** A document title that opens the original (Notion page, Drive doc) in a new tab, when there is one. */
+function SourceTitle({ title, url, kind, className = "" }: { title: string; url: string | null; kind: string; className?: string }) {
+  if (!url || url.includes("/demo/")) return <span className={className}>{title}</span>;
+  const where = brandName(kind) ?? "the original";
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" title={`Open in ${where}`} className={`inline-flex max-w-full items-center gap-1 underline decoration-line-strong decoration-1 underline-offset-4 hover:text-accent hover:decoration-accent ${className}`}>
+      <span className="truncate">{title}</span>
+      <ArrowUpRight className="h-4 w-4 shrink-0" aria-hidden />
+      <span className="sr-only">(opens in {where})</span>
+    </a>
   );
 }

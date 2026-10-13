@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Users, Pencil, Plus, Loader2, ArrowUpRight, ShieldCheck, Archive, RotateCcw, Sparkles, Send, ChevronLeft, FileText } from "lucide-react";
 import { SearchBox } from "@/components/operator/InboxView";
@@ -32,10 +32,19 @@ interface Detail {
   chunks: number;
 }
 
+const WIDE = "(min-width: 1024px)";
+function subscribeWide(onChange: () => void) {
+  const mq = window.matchMedia(WIDE);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
 export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId: string | null }) {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(initialId ?? docs.find((d) => d.visibility === "family" && !d.archived)?.id ?? null);
   const [mobileOpen, setMobileOpen] = useState(Boolean(initialId));
+  // The page opens inline on desktop; the sheet is phones and tablets only (its portal escapes the lg:hidden wrapper).
+  const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE).matches, () => false);
   const [creating, setCreating] = useState(false);
   const [tester, setTester] = useState(false);
 
@@ -108,7 +117,7 @@ export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId:
       </div>
 
       <div className="lg:hidden">
-        <Sheet open={mobileOpen && selected !== null} onOpenChange={setMobileOpen} title={docs.find((d) => d.id === selected)?.title ?? "Page"} side="bottom" snapPoints={[0.9]}>
+        <Sheet open={mobileOpen && selected !== null && !wide} onOpenChange={setMobileOpen} title={docs.find((d) => d.id === selected)?.title ?? "Page"} side="bottom" snapPoints={[0.9]}>
           {selected ? <DocPane id={selected} embedded /> : null}
         </Sheet>
       </div>

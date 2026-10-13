@@ -8,7 +8,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Sheet } from "@/components/ui/Sheet";
 import { SearchBox } from "@/components/operator/InboxView";
 import { OUTCOME_PILL } from "@/components/operator/labels";
-import { ago } from "@/components/operator/IntegrationTiles";
+import { ago } from "@/lib/time";
 import { useToast } from "@/components/ui/Toast";
 
 export interface Thread {

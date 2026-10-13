@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { BrandIcon } from "@/components/operator/BrandIcon";
 import { FileText, ShieldCheck, Sparkles, X, ArrowRight, Pause, Play } from "lucide-react";
 
 /**
@@ -12,10 +13,12 @@ import { FileText, ShieldCheck, Sparkles, X, ArrowRight, Pause, Play } from "luc
  */
 const STEPS = [
   { title: "Connect what you already use", body: "Notion pages, Drive docs and your calendar sync in. No retyping the handbook." },
-  { title: "Privacy Guard checks everything", body: "Codes, payroll, custody notes and child health details are held before families can search them." },
+  { title: "Privacy Guard checks everything", body: "Sensitive details like codes, payroll, custody notes and child health are found automatically and held for your approval before families can search them." },
   { title: "Families get cited answers", body: "Instant, specific, with the source. Anything unclear comes to your Inbox." },
 ];
 
+/** How long each step stays up. Long enough to read on a first visit. */
+const STEP_MS = 6400;
 const KEY = "fd:banner:how";
 const listeners = new Set<() => void>();
 function readDismissed(): boolean {
@@ -49,11 +52,8 @@ export function HowItWorksBanner() {
     } catch {}
     listeners.forEach((l) => l());
   };
-  useEffect(() => {
-    if (paused || hidden) return;
-    const t = setInterval(() => setStep((s) => (s + 1) % STEPS.length), 3200);
-    return () => clearInterval(t);
-  }, [paused, hidden]);
+  // The progress bar drives the carousel: each step advances when its bar fills, and pausing freezes the bar.
+  const next = () => setStep((s) => (s + 1) % STEPS.length);
   if (hidden) return null;
 
   return (
@@ -68,11 +68,20 @@ export function HowItWorksBanner() {
           <ol className="mt-4 space-y-2">
             {STEPS.map((s, i) => (
               <li key={s.title}>
-                <button type="button" onClick={() => { setStep(i); setPaused(true); }} aria-current={step === i ? "step" : undefined} className={`flex w-full gap-3 rounded-[14px] p-2.5 text-left transition ${step === i ? "bg-surface shadow-1 ring-1 ring-line-soft" : "opacity-70 hover:opacity-100"}`}>
+                <button type="button" onClick={() => { setStep(i); setPaused(true); }} aria-current={step === i ? "step" : undefined} className={`flex w-full gap-3 rounded-[14px] p-2.5 text-left transition ${step === i ? "items-start bg-surface shadow-1 ring-1 ring-line-soft" : "items-center opacity-70 hover:opacity-100"}`}>
                   <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-caption font-bold ${step === i ? "bg-accent text-on-accent" : "bg-sunken text-muted"}`}>{i + 1}</span>
                   <span>
                     <span className="block text-dense font-semibold text-ink">{s.title}</span>
-                    {step === i ? <span className="fade-in block text-dense text-muted">{s.body}</span> : null}
+                    {step === i ? (
+                      // Every description sits in the same grid cell, so the slot is always as tall as the longest: no layout shift between steps.
+                      <span className="grid">
+                        {STEPS.map((o, j) => (
+                          <span key={o.title} aria-hidden={j !== i} className={`col-start-1 row-start-1 text-dense text-muted ${j === i ? "fade-in" : "invisible"}`}>
+                            {o.body}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
                   </span>
                 </button>
               </li>
@@ -92,6 +101,17 @@ export function HowItWorksBanner() {
         </div>
         <Demo step={step} />
       </div>
+      {/* Progress along the bottom edge: shows the demo moves on by itself, and when. */}
+      <div aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] bg-line-soft">
+        {motionOff ? null : (
+          <div
+            key={step}
+            onAnimationEnd={next}
+            className="banner-progress h-full origin-left bg-accent"
+            style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }}
+          />
+        )}
+      </div>
       <button
         type="button"
         aria-label="Hide how it works"
@@ -110,12 +130,12 @@ function Demo({ step }: { step: number }) {
       {step === 0 ? (
         <div key="s0" className="space-y-2.5">
           {[
-            ["Notion", "Parent Info (READ ME)", "bg-ink text-surface"],
-            ["Drive", "Family Handbook 2026", "bg-success-tint text-success-ink"],
-            ["Calendar", "Harbor Kids Family Calendar", "bg-info-tint text-info-ink"],
-          ].map(([k, t, tint], i) => (
+            ["notion", "Notion", "Parent Info (READ ME)"],
+            ["drive", "Google Drive", "Family Handbook 2026"],
+            ["calendar", "Google Calendar", "Harbor Kids Family Calendar"],
+          ].map(([kind, k, t], i) => (
             <div key={t} className="rise-in flex items-center gap-3 rounded-[14px] bg-surface p-3 shadow-1" style={{ animationDelay: `${i * 220}ms` }}>
-              <span className={`grid h-9 w-9 place-items-center rounded-[10px] text-[11px] font-bold ${tint}`}>{k.slice(0, 1)}</span>
+              <BrandIcon kind={kind} size={36} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-dense font-semibold text-ink">{t}</p>
                 <p className="text-caption text-muted">{k}</p>

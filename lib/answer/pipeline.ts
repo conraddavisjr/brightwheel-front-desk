@@ -5,7 +5,8 @@ import { config } from "@/lib/config";
 import { hit } from "@/lib/guard/rateLimit";
 import { normalizeQuestion, route, topicOf } from "@/lib/guard/router";
 import { searchKnowledge, type Retrieval } from "@/lib/retrieval/search";
-import { generateAnswer } from "@/lib/answer/generate";
+import { extractiveAnswer, generateAnswer } from "@/lib/answer/generate";
+import { answerableFollowUps } from "@/lib/answer/followUps";
 import { openerFor, utteranceKind, looksSpanish } from "@/lib/answer/fillers";
 import { routeCard, type SchoolContact } from "@/lib/answer/routeReplies";
 import { asksForHours, hoursFacts, openNow, type WeeklyHours } from "@/lib/answer/hours";
@@ -91,7 +92,7 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
 
   const topic = topicOf(question);
   const finish = async function* (card: AnswerCard, reason: string | null): AsyncGenerator<AskEvent> {
-    const safe = scrubCard(card, school);
+    const safe = scrubCard({ ...card, followUps: await answerableFollowUps(school, card.followUps, { exclude: question }) }, school);
     const latencyMs = Date.now() - t0;
     const messageId = persist
       ? await saveMessage(conversationId, input.schoolId, {
@@ -125,6 +126,21 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
     return;
   }
 
+  // Opening hours are structured data the director owns: answered in code, instantly, with no search and no model.
+  if (Object.keys(school.hours).length > 0 && asksForHours(question)) {
+    const facts = hoursFacts(school.hours);
+    const card: AnswerCard = {
+      ...emptyCard(),
+      kind: "hours",
+      headline: facts[0] ? `We're open ${facts[0].label}, ${facts[0].value}.` : "Here are our hours.",
+      facts,
+      openNow: openNow(school.hours, school.timezone),
+      followUps: ["When are you closed next?", "What is the late pickup fee?", "How do I book a tour?"],
+    };
+    yield* finish(card, "structured_hours");
+    return;
+  }
+
   yield { type: "status", phase: "searching", label: looksSpanish(question) ? "Buscando en el manual…" : `Checking ${possessive(school.shortName)} handbook…` };
   let retrieval: Retrieval;
   try {
@@ -135,41 +151,14 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
     return;
   }
 
-  // Hours are answered from structured data, with the handbook as backup context.
-  const isHours = Object.keys(school.hours).length > 0 && asksForHours(question);
-
-  if (isHours) {
-    // Opening hours are structured data the director owns: answered in code, instantly, never by a model.
-    const facts = hoursFacts(school.hours);
-    const cite = retrieval.passages.find((p) => /\b(hours|open|close[sd]?)\b/i.test(p.text) && /\d{1,2}(:\d{2})?\s?(am|pm)/i.test(p.text) && !/fever|vomit|sick|ill/i.test(p.text));
-    const card: AnswerCard = {
-      ...emptyCard(),
-      kind: "hours",
-      headline: facts[0] ? `We're open ${facts[0].label}, ${facts[0].value}.` : "Here are our hours.",
-      body: "Holidays and closures are on the school calendar. Ask \"When are you closed?\" to see the next ones.",
-      facts,
-      openNow: openNow(school.hours, school.timezone),
-      citations: cite ? [{ id: cite.id, documentId: cite.documentId, title: cite.title, heading: cite.heading.split(" > ").slice(1).join(" › ") || cite.title, excerpt: plain(cite.text).slice(0, 280), url: cite.url, sourceKind: cite.sourceKind, updatedAt: cite.updatedAt }] : [],
-      followUps: ["When are you closed next?", "What is the late pickup fee?", "How do I book a tour?"],
-    };
-    yield* finish(card, "structured_hours");
-    return;
-  }
-
   if (retrieval.strength === "none") {
     yield* finish(await unsure(question, topic, input, school, null, persist), "no_match");
     return;
   }
 
   yield { type: "status", phase: "reading", label: "Reading the details…" };
-  const gen = await generateAnswer({
-    question,
-    schoolName: school.name,
-    timezone: school.timezone,
-    topic,
-    retrieval,
-    medicalCaveat: r.medicalCaveat,
-  });
+  const genInput = { question, schoolName: school.name, timezone: school.timezone, topic, retrieval, medicalCaveat: r.medicalCaveat };
+  const gen = await generateAnswer(genInput);
   yield { type: "status", phase: "writing", label: "Putting it together…" };
 
   let lastSent = 0;
@@ -190,15 +179,17 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   }
 
   let answer: ModelAnswer;
+  let mode: "live" | "extractive" = gen.live ? "live" : "extractive";
   try {
     answer = await gen.final;
   } catch (err) {
-    console.error("[ask] generation failed", err);
-    yield* finish(await unsure(question, topic, input, school, retrieval, persist), "generation_failed");
-    return;
+    // The model failed mid-answer (quota, truncation, network): answer from the passages instead of giving up.
+    console.error("[ask] generation failed, using extractive answer", err);
+    answer = extractiveAnswer(genInput);
+    mode = "extractive";
   }
 
-  const card = buildCard(answer, retrieval, school, r.medicalCaveat, isHours);
+  const card = buildCard(answer, retrieval, school, r.medicalCaveat);
   if (!card) {
     yield* finish(await unsure(question, topic, input, school, retrieval, persist), answer.grounded ? "no_valid_citation" : "ungrounded");
     return;
@@ -206,11 +197,11 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   if (retrieval.conflict && persist) {
     await recordGap(input.schoolId, question, `conflict ${[retrieval.conflict.a.documentId, retrieval.conflict.b.documentId].sort().join(" ")}`, topic, input.parentId, retrieval.conflict.note);
   }
-  yield* finish(card, gen.live ? "live" : "extractive");
+  yield* finish(card, mode);
 }
 
 /** Turn the model's answer into the parent's card, keeping only what we can stand behind. */
-export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalCaveat: boolean, isHours: boolean): AnswerCard | null {
+export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalCaveat: boolean): AnswerCard | null {
   const byId = new Map(r.passages.map((p) => [p.id, p]));
   const stale = r.conflict?.outdatedDocumentId ?? null;
   const cited = [...new Set(a.citations)]
@@ -219,11 +210,11 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
   const evById = new Map(r.events.map((e) => [e.id, e]));
   const events = [...new Set(a.eventIds)].map((id) => evById.get(id)).filter((e): e is NonNullable<typeof e> => Boolean(e));
 
-  if (!isHours && (!a.grounded || (cited.length === 0 && events.length === 0))) return null;
+  if (!a.grounded || (cited.length === 0 && events.length === 0)) return null;
 
   const card: AnswerCard = {
     outcome: "answered",
-    kind: events.length && !isHours ? "event" : a.kind,
+    kind: events.length ? "event" : a.kind,
     headline: a.headline.trim(),
     body: a.body.trim(),
     facts: a.facts.filter((f) => f.label && f.value).slice(0, 10),
@@ -244,7 +235,7 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
     openNow: null,
   };
 
-  if (isHours || card.kind === "hours") {
+  if (card.kind === "hours") {
     // Opening hours come from the school's structured settings, which the director owns, not from prose.
     card.kind = "hours";
     card.openNow = openNow(school.hours, school.timezone);
@@ -268,14 +259,14 @@ async function unsure(question: string, topic: string, input: AskInput, school: 
     await recordGap(input.schoolId, question, normalizeQuestion(question), topic, input.parentId, null);
     logged = true;
   }
-  const related = r?.passages[0];
   return {
     ...emptyCard(),
     outcome: "unsure",
     kind: "contact",
     headline: `I don't have that in ${possessive(school.shortName)} information yet.`,
     body: "I've passed your question to the front desk so they can answer it and add it for other families. You'll get a reply in the brightwheel app.",
-    followUps: related ? [`Tell me about ${related.heading.split(" > ").pop()?.replace(/^\d+[.)]\s*/, "").toLowerCase()}`] : ["What are your hours?", "What's coming up this month?"],
+    // Checked school suggestions fill this row (see answerableFollowUps).
+    followUps: [],
     handoff: { reason: "Not in the school's information", phone: school.phone, email: school.email, gapLogged: logged },
   };
 }

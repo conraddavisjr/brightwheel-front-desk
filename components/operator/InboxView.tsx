@@ -7,7 +7,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Pill } from "@/components/ui/Pill";
 import { Avatar } from "@/components/ui/Avatar";
 import { TOPIC_LABEL } from "@/components/operator/labels";
-import { ago } from "@/components/operator/IntegrationTiles";
+import { ago } from "@/lib/time";
 import { useToast } from "@/components/ui/Toast";
 
 export interface GapItem {
@@ -34,13 +34,17 @@ const TABS = [
   { id: "dismissed", label: "Dismissed" },
 ] as const;
 
-export function InboxView({ items, focusId }: { items: GapItem[]; focusId: string | null }) {
+export function InboxView({ items, focusId, onlyConflicts = false }: { items: GapItem[]; focusId: string | null; onlyConflicts?: boolean }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("open");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(focusId);
+  const [conflictsOnly, setConflictsOnly] = useState(onlyConflicts);
   const visible = useMemo(
-    () => items.filter((g) => g.status === tab && (!q || g.question.toLowerCase().includes(q.toLowerCase()))).sort((a, b) => (a.kind === "conflict" ? -1 : 0) - (b.kind === "conflict" ? -1 : 0) || b.ask_count - a.ask_count),
-    [items, tab, q],
+    () =>
+      items
+        .filter((g) => g.status === tab && (!conflictsOnly || g.kind === "conflict") && (!q || g.question.toLowerCase().includes(q.toLowerCase())))
+        .sort((a, b) => (a.kind === "conflict" ? -1 : 0) - (b.kind === "conflict" ? -1 : 0) || b.ask_count - a.ask_count),
+    [items, tab, q, conflictsOnly],
   );
   const current = items.find((g) => g.id === openId) ?? null;
 
@@ -59,6 +63,14 @@ export function InboxView({ items, focusId }: { items: GapItem[]; focusId: strin
         </div>
         <SearchBox value={q} onChange={setQ} placeholder="Search questions" />
       </div>
+      {conflictsOnly ? (
+        <p className="flex items-center gap-2 text-dense text-muted">
+          <Pill tone="orange">Documents disagree</Pill> Showing only documents that disagree.
+          <button type="button" onClick={() => setConflictsOnly(false)} className="min-h-9 rounded-full px-2 font-semibold text-accent hover:bg-accent-tint">
+            Show everything
+          </button>
+        </p>
+      ) : null}
 
       {visible.length === 0 ? (
         <div className="rounded-[20px] bg-surface p-10 text-center shadow-1 ring-1 ring-line-soft">

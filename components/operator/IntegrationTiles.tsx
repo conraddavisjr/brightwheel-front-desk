@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Pill } from "@/components/ui/Pill";
 import { BrandIcon } from "@/components/operator/BrandIcon";
+import { ago } from "@/lib/time";
 
 export interface SourceRow {
   id: string;
@@ -17,15 +18,6 @@ const CATALOG = [
   { kind: "calendar", name: "Google Calendar", blurb: "Events, closures and holidays", alt: ["ical"] },
   { kind: "slack", name: "Slack", blurb: "Unanswered questions in a channel" },
 ];
-
-export function ago(iso: string | null): string {
-  if (!iso) return "never";
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 90) return "just now";
-  if (s < 3600) return `${Math.round(s / 60)} min ago`;
-  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
-  return `${Math.round(s / 86400)}d ago`;
-}
 
 export function IntegrationTiles({ sources, compact = false }: { sources: SourceRow[]; compact?: boolean }) {
   return (

@@ -56,11 +56,11 @@ const NEAR: Record<string, number> = { stub: 0.62, default: 0.42 };
 
 const EVENTISH = /\b(when|what day|date|event|events|calendar|upcoming|next|this week|this month|closed|closure|holiday|break|festival|picnic|party|trip|picture day|photo day|conference|potluck|concert|graduation|day off|days off|in-service)\b/i;
 
-export async function searchKnowledge(schoolId: string, question: string, limit = 6): Promise<Retrieval> {
+export async function searchKnowledge(schoolId: string, question: string, limit = 6, queryEmbedding?: { vector: number[]; model: string } | null): Promise<Retrieval> {
   const client = db();
-  const model = await indexModel(schoolId);
-  let embedding: number[] | null = null;
-  let embedModel: string | null = null;
+  const model = queryEmbedding ? null : await indexModel(schoolId);
+  let embedding: number[] | null = queryEmbedding?.vector ?? null;
+  let embedModel: string | null = queryEmbedding?.model ?? null;
   if (model) {
     try {
       const e = await embedTexts([question], "query", model);

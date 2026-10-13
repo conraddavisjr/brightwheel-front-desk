@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#FFF3D1"/>
+  <path d="M0 50 C14 41 24 41 32 46 C40 41 50 41 64 50 V48 V64 H0 Z" fill="#4FA06A"/>
+  <path d="M32 36 V52" stroke="#2F7A4A" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(0 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(30 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(60 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(90 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(120 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(150 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(180 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(210 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(240 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(270 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(300 32 27)"/><ellipse cx="32" cy="15.5" rx="4.2" ry="7.5" fill="#FFC21F" transform="rotate(330 32 27)"/>
+  <circle cx="32" cy="27" r="7.5" fill="#7A4A1E"/>
+  <circle cx="30" cy="25" r="1.4" fill="#A0682F"/><circle cx="34" cy="27.5" r="1.4" fill="#A0682F"/><circle cx="30.5" cy="29.5" r="1.2" fill="#A0682F"/>
+</svg>

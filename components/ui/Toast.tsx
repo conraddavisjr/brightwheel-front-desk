@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
-import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, AlertCircle, Info, X, ArrowRight } from "lucide-react";
 
 type Tone = "success" | "danger" | "neutral";
 interface Toast {
@@ -9,6 +10,8 @@ interface Toast {
   tone: Tone;
   title: string;
   body?: string;
+  /** Optional link, e.g. to open what was just created. */
+  action?: { label: string; href: string };
 }
 type Push = (t: Omit<Toast, "id">) => void;
 
@@ -23,7 +26,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (t) => {
       const id = Date.now() + Math.random();
       setToasts((ts) => [...ts.slice(-2), { ...t, id }]);
-      setTimeout(() => dismiss(id), 6000);
+      // A toast with a link stays longer, so there is time to tap it.
+      setTimeout(() => dismiss(id), t.action ? 10000 : 6000);
     },
     [dismiss],
   );
@@ -37,6 +41,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className="min-w-0 flex-1">
               <p className="text-dense font-semibold text-ink">{t.title}</p>
               {t.body ? <p className="mt-0.5 text-caption text-muted">{t.body}</p> : null}
+              {t.action ? (
+                <Link href={t.action.href} onClick={() => dismiss(t.id)} className="mt-1.5 inline-flex min-h-8 items-center gap-1 rounded-full text-label font-semibold text-accent hover:underline">
+                  {t.action.label} <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              ) : null}
             </div>
             <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="-m-1 grid h-8 w-8 place-items-center rounded-full text-muted hover:bg-sunken">
               <X className="h-4 w-4" aria-hidden />

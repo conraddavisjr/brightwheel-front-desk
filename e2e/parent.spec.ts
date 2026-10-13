@@ -3,7 +3,7 @@ import { ask, signIn } from "./support";
 
 test.beforeEach(async ({ page }) => {
   await signIn(page, "harbor-kids", "parent");
-  await page.goto("/ask");
+  await page.goto("/ask/chat");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 });
@@ -17,7 +17,7 @@ test("a cited answer from the school's own policy", async ({ page }) => {
   // Back closes the sheet before it leaves the page.
   await page.goBack();
   await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page).toHaveURL(/\/ask$/);
+  await expect(page).toHaveURL(/\/ask\/chat$/);
 });
 
 test("an event card with add-to-calendar", async ({ page }) => {
@@ -54,7 +54,8 @@ test("unknown questions go to the front desk, and the director's answer is used 
   await director.getByText(topic.q).first().click();
   await director.getByLabel("Answer, in your words").fill(topic.a);
   await director.getByRole("button", { name: "Publish answer" }).click();
-  await expect(director.getByText(/Published/)).toBeVisible();
+  // Publishing chunks, scans and indexes the answer before confirming.
+  await expect(director.getByText(/Published/)).toBeVisible({ timeout: 15_000 });
   await director.close();
 
   card = await ask(page, topic.again);

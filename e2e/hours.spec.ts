@@ -3,7 +3,7 @@ import { ask, signIn } from "./support";
 
 test.beforeEach(async ({ page }) => {
   await signIn(page, "sunflower-valley", "parent");
-  await page.goto("/ask");
+  await page.goto("/ask/chat");
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 });

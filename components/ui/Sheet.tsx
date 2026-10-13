@@ -114,6 +114,10 @@ export function Sheet({
         <Drawer.Overlay className="fixed inset-0 z-40" />
         <Drawer.Content
           aria-describedby={description ? undefined : undefined}
+          // Escape inside an open listbox (a custom select) closes the list, not the sheet.
+          onEscapeKeyDown={(e) => {
+            if ((e.target as HTMLElement | null)?.closest?.('[role="listbox"]')) e.preventDefault();
+          }}
           className={
             right
               ? "fixed inset-y-2 right-2 z-50 flex flex-col overflow-hidden rounded-[24px] bg-raised shadow-3 outline-none ring-1 ring-line-soft"
@@ -139,7 +143,7 @@ export function Sheet({
           ) : (
             <Drawer.Handle className="!mt-2.5 !mb-1 !h-1.5 !w-10 !bg-line" aria-label="Drag to resize or close" />
           )}
-          <div className="flex items-start gap-3 px-5 pt-4 pb-3 sm:px-6">
+          <div className="flex items-start gap-3 px-5 pt-4 pb-2 sm:px-6">
             <div className="min-w-0 flex-1">
               <Drawer.Title className="text-title-2 font-bold text-ink">{title}</Drawer.Title>
               {description ? <Drawer.Description className="mt-1 text-dense text-muted">{description}</Drawer.Description> : <Drawer.Description className="sr-only">Panel</Drawer.Description>}
@@ -148,7 +152,8 @@ export function Sheet({
               <X className="h-5 w-5" aria-hidden />
             </Drawer.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">
+          {/* pt-1: a scroll container clips focus rings; this keeps the first field's ring whole. */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-1 pb-6 sm:px-6">
             {children}
           </div>
           {footer ? <div className="border-t border-line-soft bg-raised px-5 py-3 sm:px-6" style={{ paddingBottom: "max(12px, var(--safe-bottom))" }}>{footer}</div> : null}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpenCheck, CalendarDays, MessageCircleQuestion, ShieldCheck, Sparkles, Mic, Inbox, PlugZap } from "lucide-react";
 import { Wordmark } from "@/components/brand/WheelMark";
-import { SignInButton } from "@/components/landing/SignInButton";
+import { DemoDoor } from "@/components/landing/DemoDoor";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Pill } from "@/components/ui/Pill";
 import { Disclaimer } from "@/components/brand/Disclaimer";
@@ -42,12 +42,8 @@ export default function Landing() {
             <p className="mt-2 text-dense text-muted">Ask anything by text, voice or a guided flow. Answers cite the school&apos;s own documents, and anything uncertain goes to staff.</p>
             <ParentPreview />
             <div className="mt-5 grid gap-2.5">
-              <SignInButton school="harbor-kids" role="parent">
-                Ask Harbor Kids as Maya
-              </SignInButton>
-              <SignInButton school="sunflower-valley" role="parent" variant="secondary">
-                Ask Sunflower Valley as Priya
-              </SignInButton>
+              <DemoDoor school="harbor-kids" role="parent" title="Chat with Harbor Kids" person={{ name: "Maya Chen-Ortiz", firstName: "Maya", hue: 340 }} detail="Lucas's parent" />
+              <DemoDoor school="sunflower-valley" role="parent" title="Chat with Sunflower Valley" person={{ name: "Priya Raman", firstName: "Priya", hue: 12 }} detail="Leo's parent" variant="secondary" />
             </div>
           </article>
 
@@ -59,18 +55,14 @@ export default function Landing() {
             <p className="mt-2 text-dense text-muted">Connect Notion, Google Drive and Calendar. Privacy Guard holds anything sensitive before families can search it. See every question and fix gaps fast.</p>
             <OperatorPreview />
             <div className="mt-5 grid gap-2.5">
-              <SignInButton school="harbor-kids" role="director">
-                Harbor Kids · Notion, Drive and Calendar
-              </SignInButton>
-              <SignInButton school="sunflower-valley" role="director" variant="secondary">
-                Sunflower Valley · Notion only
-              </SignInButton>
+              <DemoDoor school="harbor-kids" role="director" title="Manage Harbor Kids" person={{ name: "Gretchen Lindqvist", firstName: "Gretchen", hue: 187 }} detail="Notion, Drive and Calendar" />
+              <DemoDoor school="sunflower-valley" role="director" title="Manage Sunflower Valley" person={{ name: "Marisol Okafor", firstName: "Marisol", hue: 268 }} detail="Notion only" variant="secondary" />
             </div>
           </article>
         </section>
 
         <section id="how" className="mt-16 scroll-mt-8">
-          <h2 className="text-center text-title-1 font-bold">Things to try in five minutes</h2>
+          <h2 className="text-center text-title-1 font-bold">What you can do in this demo</h2>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {TRY.map((t) => (
               <li key={t.title} className="rounded-[20px] bg-surface p-5 shadow-1 ring-1 ring-line-soft">
@@ -115,7 +107,7 @@ function ParentPreview() {
           </div>
           <div className="min-w-0">
             <p className="text-dense font-semibold text-ink">Picture Day</p>
-            <p className="text-caption text-muted">Thursday · 9:00am - 12:00pm</p>
+            <p className="text-caption text-muted">Thursday · 8:30am - 11:30am</p>
           </div>
           <span className="ml-auto rounded-full bg-accent-tint px-3 py-1.5 text-caption font-semibold text-accent">Add</span>
         </div>

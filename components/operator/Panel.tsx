@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function PageHeader({ title, subtitle, action, leading }: { title: string; subtitle?: string; action?: ReactNode; leading?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.02em] text-ink sm:text-display">{title}</h1>
-        {subtitle ? <p className="mt-1 text-dense text-muted sm:text-body">{subtitle}</p> : null}
+      <div className="flex items-center gap-3.5 sm:gap-4">
+        {/* As tall as the title plus subtitle (one line each), and square. */}
+        {leading ? <div className="size-[58px] shrink-0 sm:size-[70px]">{leading}</div> : null}
+        <div>
+          <h1 className="text-[26px] font-bold leading-tight tracking-[-0.02em] text-ink sm:text-display">{title}</h1>
+          {subtitle ? <p className="mt-1 text-dense text-muted sm:text-body">{subtitle}</p> : null}
+        </div>
       </div>
       {action}
     </div>

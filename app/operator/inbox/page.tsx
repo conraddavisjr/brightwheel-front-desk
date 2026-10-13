@@ -24,7 +24,7 @@ export default function InboxPage({ searchParams }: PageProps<"/operator/inbox">
 async function InboxData({ searchParams }: { searchParams: PageProps<"/operator/inbox">["searchParams"] }) {
   const s = await getSession();
   if (!s || s.role === "parent") redirect("/");
-  const [{ gap: focus }, gaps, people] = await Promise.all([searchParams, openGaps(s.schoolId), peopleById(s.schoolId)]);
+  const [{ gap: focus, kind }, gaps, people] = await Promise.all([searchParams, openGaps(s.schoolId), peopleById(s.schoolId)]);
   // Conflicts name their two documents in the normalized key ("conflict <docA> <docB>").
   const { data: conflictKeys } = await db().from("gaps").select("id,normalized").eq("school_id", s.schoolId).eq("kind", "conflict");
   const ids = [...new Set((conflictKeys ?? []).flatMap((c) => c.normalized.split(" ").slice(1)))];
@@ -42,5 +42,5 @@ async function InboxData({ searchParams }: { searchParams: PageProps<"/operator/
             .sort((a: { outdated: boolean }, b: { outdated: boolean }) => Number(b.outdated) - Number(a.outdated))
         : [],
   }));
-  return <InboxView items={items} focusId={typeof focus === "string" ? focus : null} />;
+  return <InboxView items={items} focusId={typeof focus === "string" ? focus : null} onlyConflicts={kind === "conflict"} />;
 }

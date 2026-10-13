@@ -44,6 +44,7 @@ async function Data({ searchParams }: { searchParams: PageProps<"/operator/sourc
       error: src.last_error,
       live: Boolean(src.token_enc) || src.kind === "ical",
       demo: Boolean((src.config as { demo?: boolean })?.demo) && !src.token_enc,
+      link: (src.config as { link?: string | null })?.link ?? null,
       docs: mine.length,
       familyDocs: mine.filter((d) => d.visibility === "family").length,
       events: (events.data ?? []).filter((e) => e.source_id === src.id).length,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { startDemoSession } from "@/lib/demo/signIn";
 
-/** JSON twin of the signInAs Server Action, for tests and scripts. */
+/** JSON twin of /demo/enter, for tests and scripts. */
 const Body = z.object({ school: z.enum(["sunflower-valley", "harbor-kids"]), role: z.enum(["director", "parent"]), personId: z.string().uuid().optional() });
 
 export async function POST(req: Request) {

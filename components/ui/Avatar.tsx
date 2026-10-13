@@ -1,5 +1,9 @@
-/** Initials on a soft tint of the person's hue. */
+import Image from "next/image";
+import { FACES } from "@/lib/demo/people";
+
+/** A face for the demo personas; initials on a soft tint of the person's hue for everyone else. */
 export function Avatar({ name, hue = 230, size = 36, className = "" }: { name: string; hue?: number; size?: number; className?: string }) {
+  const face = FACES[name];
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -9,7 +13,7 @@ export function Avatar({ name, hue = 230, size = 36, className = "" }: { name: s
   return (
     <span
       aria-hidden="true"
-      className={`inline-grid shrink-0 place-items-center rounded-full font-semibold ${className}`}
+      className={`inline-grid shrink-0 place-items-center overflow-hidden rounded-full font-semibold ${className}`}
       style={{
         width: size,
         height: size,
@@ -18,7 +22,7 @@ export function Avatar({ name, hue = 230, size = 36, className = "" }: { name: s
         color: `hsl(${hue} 55% 32%)`,
       }}
     >
-      {initials}
+      {face ? <Image src={face} alt="" width={size} height={size} unoptimized loading="eager" style={{ width: size, height: size }} /> : initials}
     </span>
   );
 }

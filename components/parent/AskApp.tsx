@@ -1,24 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Clock3, Wallet, Thermometer, UtensilsCrossed, CalendarDays, Footprints, Stethoscope, ChevronRight, WifiOff, LogOut } from "lucide-react";
-import Link from "next/link";
+import { Clock3, Wallet, Thermometer, UtensilsCrossed, CalendarDays, Footprints, Stethoscope, ChevronRight, WifiOff } from "lucide-react";
 import type { AnswerCard, Citation } from "@/lib/schemas";
 import { readAsk } from "@/lib/client/askStream";
 import { useSpeechInput } from "@/lib/client/useSpeechInput";
 import { speak, stopSpeaking } from "@/lib/client/speaker";
 import { AskBar } from "@/components/parent/AskBar";
 import { AnswerView } from "@/components/parent/AnswerView";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { VoiceOverlay } from "@/components/parent/VoiceOverlay";
 import { SourcesSheet } from "@/components/parent/SourcesSheet";
 import { MessageStaffSheet } from "@/components/parent/MessageStaffSheet";
 import { SickCheckSheet } from "@/components/parent/SickCheckSheet";
-import { Avatar } from "@/components/ui/Avatar";
-import { WheelMark } from "@/components/brand/WheelMark";
+import { ParentHeader } from "@/components/parent/ParentHeader";
 import { possessive } from "@/lib/text";
 
 export interface AskSchool {
+  slug: string;
   name: string;
   shortName: string;
   tagline: string | null;
@@ -53,12 +51,7 @@ const CHIPS = [
   { label: "Tours", q: "How do I book a tour?", icon: Footprints, tint: "bg-info-tint text-info-ink" },
 ];
 
-function greeting(): string {
-  const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-}
-
-export function AskApp({ school, parent, storageKey }: { school: AskSchool; parent: AskParent; storageKey: string }) {
+export function AskApp({ school, parent, storageKey, initialQuestion = null, openSickCheck = false }: { school: AskSchool; parent: AskParent; storageKey: string; initialQuestion?: string | null; openSickCheck?: boolean }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -66,9 +59,8 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
   const [voiceText, setVoiceText] = useState("");
   const [sources, setSources] = useState<{ citations: Citation[]; focus: number } | null>(null);
   const [staffFor, setStaffFor] = useState<string | null>(null);
-  const [sickCheck, setSickCheck] = useState(false);
+  const [sickCheck, setSickCheck] = useState(openSickCheck);
   const [offline, setOffline] = useState(false);
-  const [hello, setHello] = useState("Hello");
   const conversationId = useRef<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +69,6 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
 
   // Restore the last few answers (also what makes the app useful offline).
   useEffect(() => {
-    setHello(greeting());
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null") as { turns: Turn[]; conversationId: string | null } | null;
       if (saved?.turns?.length) {
@@ -168,6 +159,18 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
     [busy, scrollToEnd],
   );
 
+  // Arriving from Home with a question (?q=): ask it once, then drop it from the URL so a reload doesn't repeat it.
+  const askedInitial = useRef(false);
+  useEffect(() => {
+    if (!initialQuestion || askedInitial.current) return;
+    askedInitial.current = true;
+    window.history.replaceState(window.history.state, "", "/ask/chat");
+    void ask(initialQuestion);
+  }, [initialQuestion, ask]);
+  useEffect(() => {
+    if (openSickCheck) window.history.replaceState(window.history.state, "", "/ask/chat");
+  }, [openSickCheck]);
+
   const speech = useSpeechInput({
     onText: (t) => {
       setVoiceText(t);
@@ -209,22 +212,7 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-[720px] flex-col">
-      <header className="sticky top-0 z-20 flex items-center gap-3 bg-canvas/85 px-4 py-3 backdrop-blur-xl sm:px-6">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface shadow-1 ring-1 ring-line-soft">
-          <WheelMark size={24} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-headline font-semibold text-ink">{school.name}</p>
-          <p className="flex items-center gap-1.5 text-caption text-muted">
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${school.openNow.open ? "pulse-dot bg-success" : "bg-[var(--ink-placeholder)]"}`} style={{ color: "var(--success)" }} />
-            Front Desk · {school.openNow.label}
-          </p>
-        </div>
-        <ThemeToggle className="-mr-2" />
-        <Link href="/" aria-label="Switch perspective" className="grid h-11 w-11 place-items-center rounded-full text-muted hover:bg-sunken hover:text-ink">
-          <LogOut className="h-5 w-5" aria-hidden />
-        </Link>
-      </header>
+      <ParentHeader school={school} back />
 
       {offline ? (
         <div role="status" className="mx-4 mt-1 flex items-center gap-2 rounded-[12px] bg-warning-tint px-3 py-2 text-label font-medium text-warning-ink sm:mx-6">
@@ -235,17 +223,9 @@ export function AskApp({ school, parent, storageKey }: { school: AskSchool; pare
       <main className="flex-1 px-4 pb-40 sm:px-6" aria-live="polite" aria-relevant="additions">
         {empty ? (
           <section className="rise-in pt-6 sm:pt-10">
-            <div className="flex items-center gap-3">
-              <Avatar name={parent.name} hue={parent.hue} size={44} />
-              <div>
-                <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-ink sm:text-display">
-                  {hello}, {parent.firstName}
-                </h1>
-                {parent.child ? <p className="text-dense text-muted">{parent.child.name} · {parent.child.room}</p> : null}
-              </div>
-            </div>
-            <p className="mt-5 text-pretty text-body text-muted">
-              Ask anything about {school.shortName}. Answers come straight from the school&apos;s own handbook and calendar, and anything I&apos;m not sure about goes to the front desk.
+            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-ink sm:text-display">Ask {school.shortName} anything</h1>
+            <p className="mt-2 text-pretty text-body text-muted">
+              Answers come straight from the school&apos;s own handbook and calendar, and anything I&apos;m not sure about goes to the front desk.
             </p>
 
             <h2 className="mt-7 text-label font-semibold text-muted">Popular questions</h2>

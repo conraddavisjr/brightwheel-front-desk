@@ -34,7 +34,8 @@ test("adding a rule scans existing documents", async ({ page }) => {
   await page.getByLabel("Name").fill(`Caterer ${test.info().project.name}`);
   await page.getByLabel("What should we look for?").fill(test.info().project.name === "desktop" ? 'Anything about "Little Fork"' : 'Anything about "Fairbanks Farm"');
   await page.getByRole("button", { name: /Add rule and scan/ }).click();
-  await expect(page.getByText(/Rule added/)).toBeVisible();
+  // The new rule rescans every document before confirming.
+  await expect(page.getByText(/Rule added/)).toBeVisible({ timeout: 20_000 });
 });
 
 test("a conflict between two documents can be resolved by retiring the old one", async ({ page }) => {
@@ -73,8 +74,10 @@ test("Privacy Guard summary cards open their sections, and rule switches work", 
 test("knowledge pages link to the real Notion page", async ({ page }) => {
   await page.goto("/operator/knowledge");
   await page.getByRole("button", { name: /Parent Info/ }).first().click();
+  // Desktop shows the page inline; only phones get the sheet.
+  if (test.info().project.name === "desktop") await expect(page.getByRole("dialog")).toHaveCount(0);
   const link = page.getByRole("link", { name: /Open in Notion/ }).filter({ visible: true });
-  await expect(link).toHaveAttribute("href", /notion\.(so|site)\/3f7f8853595081d4a2e2c41f8d5b5c36$/);
+  await expect(link).toHaveAttribute("href", /notion\.(so|site)\/3f7f8853595081d4a2e2c41f8d5b5c36$/, { timeout: 15_000 });
   await expect(link).toHaveAttribute("target", "_blank");
 });
 
@@ -105,4 +108,52 @@ test("phone: the page drawer opens at full height and stays there while content 
   expect((await drawer.boundingBox())!.height).toBeCloseTo(loading.height, 0);
   await drawer.getByRole("radio", { name: "Family-visible" }).click();
   await expect(drawer.getByRole("radio", { name: "Family-visible" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("the how-it-works banner keeps one height through every step", async ({ page }) => {
+  await page.goto("/operator");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  const banner = page.getByRole("region", { name: "How Front Desk works" });
+  await expect(banner).toBeVisible();
+  const heights: number[] = [];
+  for (const n of ["1", "2", "3", "1"]) {
+    await banner.getByRole("button", { name: new RegExp(`^${n}`) }).click();
+    await page.waitForTimeout(450); // let the step's entrance animation settle
+    heights.push(Math.round((await banner.boundingBox())!.height));
+  }
+  expect(new Set(heights).size, `heights per step: ${heights.join(", ")}`).toBe(1);
+});
+
+test("an uploaded file can be opened from the confirmation", async ({ page }) => {
+  const name = `Rain gear note ${test.info().project.name}.md`;
+  await page.goto("/operator/sources", { waitUntil: "networkidle" }); // the file input works once the page is interactive
+  await page.locator('input[type="file"]').setInputFiles({ name, mimeType: "text/markdown", buffer: Buffer.from("# Rain gear\n\nSend rain boots and a rain jacket every day. We play outside in the rain.") });
+  const view = page.getByRole("link", { name: "View it" });
+  await expect(view).toBeVisible({ timeout: 20_000 });
+  await view.click();
+  await expect(page).toHaveURL(/\/operator\/knowledge\?doc=/);
+  await expect(page.getByText("Send rain boots and a rain jacket every day.").filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+});
+
+test("the rule kind picker is a labeled list with descriptions, keyboard friendly", async ({ page }) => {
+  await page.goto("/operator/privacy");
+  await page.getByRole("tab", { name: /Protected info rules/ }).click();
+  await page.getByRole("button", { name: /Add a rule/ }).click();
+  await expect(page.getByText(/exact pattern/i)).toHaveCount(0);
+  const picker = page.getByRole("button", { name: /Kind of information/ });
+  await picker.click();
+  const list = page.getByRole("listbox", { name: "Kind of information" });
+  await expect(list.getByRole("option")).toHaveCount(10);
+  await expect(list.getByRole("option", { name: /Building security/ })).toContainText("Door, alarm and gate codes");
+  await list.getByRole("option", { name: /Building security/ }).click();
+  await expect(list).toBeHidden();
+  await expect(picker).toContainText("Building security");
+
+  // Keyboard: open, move, choose; Escape closes the list but not the drawer.
+  await picker.press("ArrowDown");
+  await expect(list).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(list).toBeHidden();
+  await expect(page.getByRole("dialog", { name: /Add a protected-info rule/ })).toBeVisible();
 });

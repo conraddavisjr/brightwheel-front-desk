@@ -6,7 +6,8 @@ import { getSession } from "@/lib/session";
 import { navCounts } from "@/lib/db/operator";
 import { person, schoolForSession } from "@/lib/db/queries";
 import { SideNav, TabBar } from "@/components/operator/Nav";
-import { WheelMark, Wordmark } from "@/components/brand/WheelMark";
+import { Wordmark } from "@/components/brand/WheelMark";
+import { SchoolLogo } from "@/components/brand/SchoolLogo";
 import { Avatar } from "@/components/ui/Avatar";
 import { ViewAsParent } from "@/components/operator/ViewAsParent";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -62,7 +63,10 @@ async function SchoolCard() {
   return (
     <div className="rounded-[14px] bg-canvas-operator p-3 ring-1 ring-line-soft">
       <div className="flex items-center gap-2.5">
-        <Avatar name={me.name} hue={me.avatar_hue} size={34} />
+        <span className="relative shrink-0">
+          <Avatar name={me.name} hue={me.avatar_hue} size={36} />
+          <SchoolLogo slug={school.slug} size={18} className="absolute -bottom-1 -right-1 ring-2 ring-canvas-operator" />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-label font-semibold text-ink">{me.name}</p>
           <p className="truncate text-caption text-muted">Director · {school.short_name}</p>
@@ -86,7 +90,7 @@ async function MobileHeader() {
   const school = await schoolForSession(s);
   return (
     <header className="sticky top-0 z-20 flex items-center gap-2.5 border-b border-line-soft bg-surface/90 px-4 py-2.5 backdrop-blur-xl lg:hidden">
-      <WheelMark size={24} />
+      <SchoolLogo slug={school.slug} size={28} />
       <p className="min-w-0 flex-1 truncate text-dense font-semibold text-ink">{school.name}</p>
       <ThemeToggle className="h-9 w-9" />
       <ViewAsParent school={school.slug as "sunflower-valley" | "harbor-kids"} compact>

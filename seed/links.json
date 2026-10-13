@@ -1,39 +1,114 @@
 {
   "$comment": "Where each seed file lives in the real demo workspace (Conrad's Notion pages and Drive folder), so 'Open in Notion / Google Drive' lands on the matching page.",
   "sunflower-valley": {
-    "behavior-and-guidance.md": { "notion": "3f7f88535950812baab1ea1f4a54e0d0" },
-    "communication.md": { "notion": "3f7f885359508144b45fd4d7d7b5f186" },
-    "daily-routine.md": { "notion": "3f7f8853595081e69683e2b4791d0def" },
-    "drop-off-and-pickup.md": { "notion": "3f7f88535950819983b3fe6f79a79679" },
-    "enrollment-and-tours.md": { "notion": "3f7f8853595081d9af66cc088b8d3e5c" },
-    "family-handbook.md": { "notion": "3f7f8853595081bf9d08d1391b3f00c1" },
-    "hours-and-calendar.md": { "notion": "3f7f885359508156bee4f83af51e5f01" },
-    "illness-and-health-policy.md": { "notion": "3f7f8853595081718fe5ea1f674077e6" },
-    "meals-and-nutrition.md": { "notion": "3f7f88535950817c8cadc72bb20b15ce" },
-    "naps-and-sleep.md": { "notion": "3f7f88535950814db155cd810bddf0b1" },
-    "parent-involvement-and-events.md": { "notion": "3f7f88535950815f8d1bc140a1aebd15" },
-    "potty-training.md": { "notion": "3f7f885359508153952eec50a6cf4e4c" },
-    "safety-and-emergencies.md": { "notion": "3f7f8853595081be8a0bd0de955f2ac6" },
-    "staff-and-classrooms.md": { "notion": "3f7f88535950811ba312e2f5c2ca424b" },
-    "staff-handbook-internal.md": { "notion": "3f7f8853595081498347d7f9c4021e83" },
-    "tuition-and-fees.md": { "notion": "3f7f88535950811faef7eefb81874b3c" }
+    "behavior-and-guidance.md": {
+      "notion": "3f7f88535950812baab1ea1f4a54e0d0"
+    },
+    "communication.md": {
+      "notion": "3f7f885359508144b45fd4d7d7b5f186"
+    },
+    "daily-routine.md": {
+      "notion": "3f7f8853595081e69683e2b4791d0def"
+    },
+    "drop-off-and-pickup.md": {
+      "notion": "3f7f88535950819983b3fe6f79a79679"
+    },
+    "enrollment-and-tours.md": {
+      "notion": "3f7f8853595081d9af66cc088b8d3e5c"
+    },
+    "family-handbook.md": {
+      "notion": "3f7f8853595081bf9d08d1391b3f00c1"
+    },
+    "hours-and-calendar.md": {
+      "notion": "3f7f885359508156bee4f83af51e5f01"
+    },
+    "illness-and-health-policy.md": {
+      "notion": "3f7f8853595081718fe5ea1f674077e6"
+    },
+    "meals-and-nutrition.md": {
+      "notion": "3f7f88535950817c8cadc72bb20b15ce"
+    },
+    "naps-and-sleep.md": {
+      "notion": "3f7f88535950814db155cd810bddf0b1"
+    },
+    "parent-involvement-and-events.md": {
+      "notion": "3f7f88535950815f8d1bc140a1aebd15"
+    },
+    "potty-training.md": {
+      "notion": "3f7f885359508153952eec50a6cf4e4c"
+    },
+    "safety-and-emergencies.md": {
+      "notion": "3f7f8853595081be8a0bd0de955f2ac6"
+    },
+    "staff-and-classrooms.md": {
+      "notion": "3f7f88535950811ba312e2f5c2ca424b"
+    },
+    "staff-handbook-internal.md": {
+      "notion": "3f7f8853595081498347d7f9c4021e83"
+    },
+    "tuition-and-fees.md": {
+      "notion": "3f7f88535950811faef7eefb81874b3c"
+    }
   },
   "harbor-kids": {
-    "admissions-tour-stuff.md": { "notion": "3f7f8853595081238816e71834d410b3" },
-    "director-scratchpad.md": { "notion": "3f7f8853595081dd9de2f699432ccb35" },
-    "field-trips-and-events.md": { "notion": "3f7f8853595081d88c56d6bc4018e60e" },
-    "illness-policy-2026-updated.md": { "notion": "3f7f885359508168930ade800a1d4b99" },
-    "illness-policy-old-2024.md": { "notion": "3f7f88535950810c86e3fe039bce08d1" },
-    "lunch-and-snacks.md": { "notion": "3f7f8853595081b08046c19b8d8b3091" },
-    "parent-info-read-me.md": { "notion": "3f7f8853595081d4a2e2c41f8d5b5c36" },
-    "toddler-room-notes.md": { "notion": "3f7f8853595081f7b475d421f683acc4" },
-    "Custody - Patel family.md": { "doc": "1iYMRTaaBVd0PvmUR18EaZcJMd_bPQCQAIPco9LcKbQk" },
-    "Emergency contacts master list.csv": { "sheet": "1f5i8YjhHFh4bFB2SslYIKnu26ipho0BzHsHjAxKa_nQ" },
-    "Enrollment packet checklist.md": { "doc": "1cmq67F7Ak-zrhZm9HBdvbsMypsEGQyZC7HyrvqzejTA" },
-    "Fall Newsletter.md": { "doc": "1EZow_7WKKAwExddYbK-d8anBJkCJmtA2o7OnLEE7GBA" },
-    "Harbor Kids Family Handbook 2026.md": { "doc": "1et37Y_F3F7r0JEXBC21XzL3ZJgtnU0ivlM6iHRWcAqo" },
-    "Incident Report - 2026-09-14.md": { "doc": "1neydA7e9mYQeVp25_YHigXZ1WKyC9uzp5tSrvxf_I_Y" },
-    "Staff Payroll Sept 2026.csv": { "sheet": "1VBZUwVB6gZaLPo5GTO4wlt486RIFl_ThjTH-cGrV4Dk" },
-    "Tuition 2026-27.csv": { "sheet": "11aNTW3e0n1lCAaLKDCzGcePSLYXvO5QL6xj28nC9JX8" }
+    "admissions-tour-stuff.md": {
+      "notion": "3f7f8853595081238816e71834d410b3"
+    },
+    "director-scratchpad.md": {
+      "notion": "3f7f8853595081dd9de2f699432ccb35"
+    },
+    "field-trips-and-events.md": {
+      "notion": "3f7f8853595081d88c56d6bc4018e60e"
+    },
+    "illness-policy-2026-updated.md": {
+      "notion": "3f7f885359508168930ade800a1d4b99"
+    },
+    "illness-policy-old-2024.md": {
+      "notion": "3f7f88535950810c86e3fe039bce08d1"
+    },
+    "lunch-and-snacks.md": {
+      "notion": "3f7f8853595081b08046c19b8d8b3091"
+    },
+    "parent-info-read-me.md": {
+      "notion": "3f7f8853595081d4a2e2c41f8d5b5c36"
+    },
+    "toddler-room-notes.md": {
+      "notion": "3f7f8853595081f7b475d421f683acc4"
+    },
+    "Custody - Patel family.md": {
+      "doc": "1iYMRTaaBVd0PvmUR18EaZcJMd_bPQCQAIPco9LcKbQk"
+    },
+    "Emergency contacts master list.csv": {
+      "sheet": "1f5i8YjhHFh4bFB2SslYIKnu26ipho0BzHsHjAxKa_nQ"
+    },
+    "Enrollment packet checklist.md": {
+      "doc": "1cmq67F7Ak-zrhZm9HBdvbsMypsEGQyZC7HyrvqzejTA"
+    },
+    "Fall Newsletter.md": {
+      "doc": "1EZow_7WKKAwExddYbK-d8anBJkCJmtA2o7OnLEE7GBA"
+    },
+    "Harbor Kids Family Handbook 2026.md": {
+      "doc": "1et37Y_F3F7r0JEXBC21XzL3ZJgtnU0ivlM6iHRWcAqo"
+    },
+    "Incident Report - 2026-09-14.md": {
+      "doc": "1neydA7e9mYQeVp25_YHigXZ1WKyC9uzp5tSrvxf_I_Y"
+    },
+    "Staff Payroll Sept 2026.csv": {
+      "sheet": "1VBZUwVB6gZaLPo5GTO4wlt486RIFl_ThjTH-cGrV4Dk"
+    },
+    "Tuition 2026-27.csv": {
+      "sheet": "11aNTW3e0n1lCAaLKDCzGcePSLYXvO5QL6xj28nC9JX8"
+    }
+  },
+  "$sources": {
+    "$comment": "Where each demo source lives for real: the Notion parent page, the Drive folder, the Google Calendar.",
+    "harbor-kids": {
+      "notion": "3f7f8853595081a1a28ef91e066abdea",
+      "drive": "1Xv_r2TuIb2_66LX6fnxoDPP7tfcTCTBd",
+      "calendar": "67c1f8ee3800fa14131ef78c1b6404de379845903efd9cf1604ea03ea5c78d07@group.calendar.google.com"
+    },
+    "sunflower-valley": {
+      "notion": "3f7f8853595081679249c30cb9274a92"
+    }
   }
 }

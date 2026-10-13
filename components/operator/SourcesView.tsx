@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Loader2, Plus, Upload, Link2, CheckCircle2, AlertTriangle, Trash2, FilePlus2, Info } from "lucide-react";
+import { RefreshCw, Loader2, Plus, Upload, Link2, CheckCircle2, AlertTriangle, Trash2, FilePlus2, Info, ArrowUpRight } from "lucide-react";
 import { BrandIcon } from "@/components/operator/BrandIcon";
 import { Pill } from "@/components/ui/Pill";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
-import { ago } from "@/components/operator/IntegrationTiles";
+import { ago } from "@/lib/time";
 
 export interface SourceCard {
   id: string;
@@ -19,6 +19,8 @@ export interface SourceCard {
   error: string | null;
   live: boolean;
   demo: boolean;
+  /** The real workspace behind this source (Notion page, Drive folder, Google Calendar). */
+  link: string | null;
   docs: number;
   familyDocs: number;
   events: number;
@@ -123,7 +125,9 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
 
       {SECTIONS.map((sec) => {
         const mine = sources.filter((s) => s.kind === sec.kind || (sec.kind === "calendar" && s.kind === "ical"));
-        const can = configured[sec.needs];
+        // The demo school's Notion is a real, published workspace already; one is enough for the demo.
+        const demoNotion = sec.kind === "notion" && mine.some((s) => s.demo);
+        const can = configured[sec.needs] && !demoNotion;
         return (
           <section key={sec.kind} id={sec.kind} className="scroll-mt-6 rounded-[20px] bg-surface p-4 shadow-1 ring-1 ring-line-soft sm:p-6">
             <div className="flex flex-wrap items-start gap-4">
@@ -144,7 +148,8 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                   onClick={(e) => {
                     if (!can) {
                       e.preventDefault();
-                      toast({ tone: "neutral", title: `${sec.title} OAuth isn't configured on this deployment`, body: "See docs/SETUP.md. The demo schools show seeded content in the meantime." });
+                      if (demoNotion) toast({ tone: "neutral", title: "This school's Notion is already connected", body: "It reads the demo workspace's real pages. Use the link on the source to open them." });
+                      else toast({ tone: "neutral", title: `${sec.title} OAuth isn't configured on this deployment`, body: "See docs/SETUP.md. The demo schools show seeded content in the meantime." });
                     }
                   }}
                   className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-dense font-semibold ${can ? "bg-accent text-on-accent shadow-1 hover:bg-accent-hover" : "bg-sunken text-muted"}`}
@@ -159,7 +164,15 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                   <li key={s.id} className="flex flex-wrap items-center gap-3 rounded-[14px] bg-canvas-operator p-3.5 ring-1 ring-line-soft">
                     <div className="min-w-[55%] flex-1">
                       <p className="flex flex-wrap items-center gap-2 text-dense font-semibold text-ink">
-                        {s.account ?? s.name}
+                        {s.link ? (
+                          <a href={s.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-[6px] underline decoration-line-strong decoration-1 underline-offset-4 hover:text-accent hover:decoration-accent">
+                            {s.account ?? s.name}
+                            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                            <span className="sr-only">(opens {sec.title})</span>
+                          </a>
+                        ) : (
+                          (s.account ?? s.name)
+                        )}
                         {s.status === "error" ? <Pill tone="danger">Needs attention</Pill> : s.status === "syncing" ? <Pill tone="info">Syncing</Pill> : <Pill tone="success">Connected</Pill>}
                         {s.demo ? <Pill tone="neutral" dot={false}>Demo data</Pill> : null}
                       </p>
@@ -295,6 +308,7 @@ function UploadZone({ onDone }: { onDone: () => void }) {
           tone: j.visibility === "staff" || j.held ? "neutral" : "success",
           title: j.visibility === "staff" ? `${file.name} kept staff-only` : `${file.name} added`,
           body: j.visibility === "staff" ? `Privacy Guard found ${j.findings} sensitive details, so families can't search it. Review it in Privacy Guard.` : j.held ? `${j.held} detail${j.held > 1 ? "s" : ""} held for review. The rest is searchable now.` : `${j.chunks} passages searchable now.`,
+          action: j.documentId ? { label: "View it", href: `/operator/knowledge?doc=${j.documentId}` } : undefined,
         });
     }
     setBusy(null);

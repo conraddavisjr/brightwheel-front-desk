@@ -158,13 +158,25 @@ export async function openGaps(schoolId: string) {
   }>;
 }
 
+/**
+ * What needs a director, by section. `privacy` matches Privacy Guard's "Waiting for you":
+ * held details in active documents, plus documents it moved to staff-only that nobody confirmed yet.
+ */
 export async function navCounts(schoolId: string) {
-  const [gaps, held, waiting] = await Promise.all([
-    db().from("gaps").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("status", "open"),
-    db().from("findings").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("status", "held"),
+  const [gaps, conflicts, held, docs, waiting] = await Promise.all([
+    db().from("gaps").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("status", "open").eq("kind", "question"),
+    db().from("gaps").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("status", "open").eq("kind", "conflict"),
+    db().from("findings").select("document_id").eq("school_id", schoolId).eq("status", "held"),
+    db().from("documents").select("id,status,visibility,visibility_set_by,visibility_reviewed").eq("school_id", schoolId),
     db().from("messages").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("reason", "to_staff"),
   ]);
-  return { gaps: gaps.count ?? 0, held: held.count ?? 0, waiting: waiting.count ?? 0 };
+  const docRows = (docs.data ?? []) as Array<{ id: string; status: string; visibility: string; visibility_set_by: string; visibility_reviewed: boolean }>;
+  const active = new Set(docRows.filter((d) => d.status === "active").map((d) => d.id));
+  const heldInActive = ((held.data ?? []) as Array<{ document_id: string }>).filter((f) => active.has(f.document_id)).length;
+  const toConfirm = docRows.filter((d) => d.status === "active" && d.visibility === "staff" && d.visibility_set_by === "auto" && !d.visibility_reviewed).length;
+  const questions = gaps.count ?? 0;
+  const disagreements = conflicts.count ?? 0;
+  return { gaps: questions + disagreements, questions, conflicts: disagreements, privacy: heldInActive + toConfirm, waiting: waiting.count ?? 0 };
 }
 
 export async function peopleById(schoolId: string) {
