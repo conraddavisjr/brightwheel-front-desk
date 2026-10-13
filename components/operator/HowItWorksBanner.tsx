@@ -41,20 +41,27 @@ const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)"
 export function HowItWorksBanner() {
   // Hidden during server render; the stored preference decides on the client.
   const hidden = useSyncExternalStore(subscribe, readDismissed, () => true);
+  const dismissedHere = useSyncExternalStore(subscribe, readDismissed, () => false);
   const motionOff = useSyncExternalStore(() => () => {}, reducedMotion, () => false);
   const [step, setStep] = useState(0);
   const [pausedByUser, setPaused] = useState(false);
   const paused = pausedByUser || motionOff;
   const setHidden = (v: boolean) => {
-    if (!v) return;
     try {
-      localStorage.setItem(KEY, "dismissed");
+      if (v) localStorage.setItem(KEY, "dismissed");
+      else localStorage.removeItem(KEY);
     } catch {}
     listeners.forEach((l) => l());
   };
   // The progress bar drives the carousel: each step advances when its bar fills, and pausing freezes the bar.
   const next = () => setStep((s) => (s + 1) % STEPS.length);
-  if (hidden) return null;
+  // Dismissed: a small way back, so the tour is never lost for good.
+  if (hidden)
+    return dismissedHere ? (
+      <button type="button" onClick={() => setHidden(false)} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-ai-tint px-3.5 text-label font-semibold text-ai-ink transition hover:brightness-95">
+        <Sparkles className="h-4 w-4" aria-hidden /> How Front Desk works
+      </button>
+    ) : null;
 
   return (
     <section aria-label="How Front Desk works" className="rise-in relative overflow-hidden rounded-[24px] bg-surface shadow-2 ring-1 ring-line-soft">

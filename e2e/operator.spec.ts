@@ -157,3 +157,16 @@ test("the rule kind picker is a labeled list with descriptions, keyboard friendl
   await expect(list).toBeHidden();
   await expect(page.getByRole("dialog", { name: /Add a protected-info rule/ })).toBeVisible();
 });
+
+test("the how-it-works banner can be dismissed and brought back", async ({ page }) => {
+  await page.goto("/operator");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  const banner = page.getByRole("region", { name: "How Front Desk works" });
+  await banner.getByRole("button", { name: "Hide how it works" }).click();
+  await expect(banner).toBeHidden();
+  await page.reload();
+  await expect(banner).toBeHidden();
+  await page.getByRole("button", { name: "How Front Desk works" }).click();
+  await expect(banner).toBeVisible();
+});
