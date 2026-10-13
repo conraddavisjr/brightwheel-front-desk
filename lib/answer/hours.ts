@@ -68,6 +68,8 @@ export function asksForHours(question: string): boolean {
   const q = question.toLowerCase();
   if (/\bper hour\b|\ban hour\b|\bhourly\b|\bhow many hours\b|\bhours? (a|per|each) (day|week)\b/.test(q)) return false;
   if (/\b(holiday|thanksgiving|christmas|break|closed (on|for)|closure|closures|snow|weather)\b/.test(q)) return false;
+  // "Open" alone is ambiguous: "open spots", "open house", "tours open to grandparents" are not about hours.
+  if (/\bopen(ings?)? (spots?|spaces?|slots?|seats?|positions?|house|enrollment|registration|to)\b|\bany openings\b|\bopenings?\b/.test(q)) return false;
   return (
     /\b(open|opens|close|closes|closing|opening|what time do you|abren|cierran|horario)\b/.test(q) ||
     /\bhours of operation\b/.test(q) ||

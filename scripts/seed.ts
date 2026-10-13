@@ -21,6 +21,7 @@ import { zonedMidnight } from "@/lib/time";
 import { searchKnowledge } from "@/lib/retrieval/search";
 import { config } from "@/lib/config";
 import { manualSource } from "@/lib/operator/manualSource";
+import { screenEvent } from "@/lib/privacy/events";
 
 const ROOT = join(process.cwd(), "seed");
 
@@ -240,18 +241,22 @@ async function main() {
     const toTs = (d: string, allDay: boolean) => (allDay ? zonedMidnight(d, cal.timeZone).toISOString() : new Date(d).toISOString());
     ok(
       await client.from("events").insert(
-        cal.events.map((e) => ({
-          school_id: schoolId,
-          source_id: calSource.id,
-          external_id: e.id,
-          title: e.title,
-          starts_at: toTs(e.start, e.allDay),
-          ends_at: e.end ? toTs(e.end, e.allDay) : null,
-          all_day: e.allDay,
-          location: e.location || null,
-          description: e.description || null,
-          visibility: e.visibility === "private" ? "staff" : "family",
-        })),
+        cal.events.map((raw) => {
+          // The same Privacy Guard check a live calendar sync runs.
+          const e = screenEvent({ ...raw, location: raw.location || null, description: raw.description || null }, ctx);
+          return {
+            school_id: schoolId,
+            source_id: calSource.id,
+            external_id: e.id,
+            title: e.title,
+            starts_at: toTs(e.start, e.allDay),
+            ends_at: e.end ? toTs(e.end, e.allDay) : null,
+            all_day: e.allDay,
+            location: e.location,
+            description: e.description,
+            visibility: e.visibility === "private" || e.staffOnly ? "staff" : "family",
+          };
+        }),
       ),
       "events",
     );

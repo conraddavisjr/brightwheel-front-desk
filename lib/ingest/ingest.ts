@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { db, must, ok } from "@/lib/db/client";
-import { embedTexts, toPgVector } from "@/lib/ai/provider";
+import { embedTexts, modelAvailable, toPgVector } from "@/lib/ai/provider";
 import { chunkMarkdown } from "@/lib/retrieval/chunk";
 import { forgetFollowUps } from "@/lib/answer/followUpCache";
 import { detect, mask, mergeFindings, suggestVisibility } from "@/lib/privacy/detect";
@@ -83,7 +83,10 @@ export async function ingestDocument(input: IngestInput, opts: { force?: boolean
       .maybeSingle();
     existing = r.data;
   }
-  if (existing && existing.content_hash === hash && !opts.force) {
+  // Unchanged text is skipped, unless its AI privacy review never completed (the model was down or
+  // over its cap): then this sync is the retry, so no document stays reviewed by patterns alone for good.
+  const reviewPending = Boolean(existing && existing.classified_hash !== hash && (await modelAvailable()));
+  if (existing && existing.content_hash === hash && !opts.force && !reviewPending) {
     const n = await client.from("chunks").select("id", { count: "exact", head: true }).eq("document_id", existing.id);
     return { documentId: existing.id, changed: false, visibility: existing.visibility, findings: 0, newlyHeld: 0, chunks: n.count ?? 0 };
   }

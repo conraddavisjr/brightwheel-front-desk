@@ -23,6 +23,10 @@ describe("asksForHours", () => {
     "Are you closed for Thanksgiving?",
     "Tell me about early closures",
     "What are your tuition rates?",
+    "Do you have any open spots for toddlers?",
+    "Are tours open to grandparents?",
+    "When is the open house?",
+    "Do you have openings for an infant in March?",
     "My son had a fever, can he come in within 24 hours?",
   ])("not hours: %s", (q) => expect(asksForHours(q)).toBe(false));
 });
@@ -47,4 +51,10 @@ describe("hoursHeadline", () => {
     ["What are your hours?", tueMorning, null, "We're open Monday - Friday, 7:30am - 5:30pm."],
     ["Are you open today?", tueMorning, "Veterans Day", "We're closed today for Veterans Day. We open again tomorrow at 7:30am."],
   ])("%s", (q, now, closure, expected) => expect(hoursHeadline(q, hours, tz, now, closure)).toBe(expected));
+});
+
+describe("looksLikeFollowUp", async () => {
+  const { looksLikeFollowUp } = await import("./pipeline");
+  it.each(["And for three days?", "What about Fridays?", "how much is that?", "three days?", "Fridays?"])("follow-up: %s", (q) => expect(looksLikeFollowUp(q)).toBe(true));
+  it.each(["When is picture day?", "What are your hours?", "How much is tuition for toddlers?", "Is the school nut-free?"])("standalone: %s", (q) => expect(looksLikeFollowUp(q)).toBe(false));
 });

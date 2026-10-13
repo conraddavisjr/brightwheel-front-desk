@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test("home shows the numbers that matter", async ({ page }) => {
   await page.goto("/operator");
   await expect(page.getByText("Questions answered")).toBeVisible();
-  await expect(page.getByText("Resolved without staff")).toBeVisible();
+  await expect(page.getByText("Answered without staff")).toBeVisible();
   await expect(page.getByText("Spotlight")).toBeVisible();
   await expect(page.getByRole("img", { name: /Questions per day/ })).toBeVisible();
 });
@@ -169,4 +169,28 @@ test("the how-it-works banner can be dismissed and brought back", async ({ page 
   await expect(banner).toBeHidden();
   await page.getByRole("button", { name: "How Front Desk works" }).click();
   await expect(banner).toBeVisible();
+});
+
+test("hours edited in Knowledge are what families are told", async ({ page, browser }) => {
+  test.skip(test.info().project.name !== "desktop", "changes school settings; runs once");
+  await page.goto("/operator/knowledge");
+  await page.getByRole("button", { name: "Edit hours" }).click();
+  const sheet = page.getByRole("dialog", { name: "Hours families see" });
+  await sheet.getByLabel("Friday closes").fill("16:00");
+  await sheet.getByRole("button", { name: "Save hours" }).click();
+  await expect(page.getByText("Hours updated")).toBeVisible();
+
+  const parent = await browser.newPage();
+  await signIn(parent, "harbor-kids", "parent");
+  await parent.goto("/ask/chat");
+  await parent.getByLabel("Your question").fill("What time do you close on Friday?");
+  await parent.getByRole("button", { name: "Send question" }).click();
+  await expect(parent.locator("main article").last()).toContainText("We close at 4pm on Friday.", { timeout: 20_000 });
+  await parent.close();
+
+  // Put it back for the other tests.
+  await page.getByRole("button", { name: "Edit hours" }).click();
+  await sheet.getByLabel("Friday closes").fill("17:30");
+  await sheet.getByRole("button", { name: "Save hours" }).click();
+  await expect(page.getByText("Hours updated")).toBeVisible();
 });

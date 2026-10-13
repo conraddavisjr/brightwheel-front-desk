@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { db, must } from "@/lib/db/client";
 import { KnowledgeView, type DocItem } from "@/components/operator/KnowledgeView";
+import type { WeeklyHours } from "@/lib/answer/hours";
 import { ListSkeleton } from "@/components/operator/ListSkeleton";
 
 export const metadata: Metadata = { title: "Knowledge" };
@@ -21,10 +22,11 @@ export default function KnowledgePage({ searchParams }: PageProps<"/operator/kno
 async function Data({ searchParams }: { searchParams: PageProps<"/operator/knowledge">["searchParams"] }) {
   const s = await getSession();
   if (!s || s.role === "parent") redirect("/");
-  const [{ doc }, docs, findings] = await Promise.all([
+  const [{ doc }, docs, findings, school] = await Promise.all([
     searchParams,
     db().from("documents").select("id,title,emoji,parent_title,visibility,visibility_set_by,status,source_updated_at,updated_at,sources(kind,account_label,name)").eq("school_id", s.schoolId).order("title"),
     db().from("findings").select("document_id,status").eq("school_id", s.schoolId),
+    db().from("schools").select("hours").eq("id", s.schoolId).single(),
   ]);
   const held = new Map<string, number>();
   for (const f of findings.data ?? []) if (f.status === "held") held.set(f.document_id, (held.get(f.document_id) ?? 0) + 1);
@@ -40,5 +42,5 @@ async function Data({ searchParams }: { searchParams: PageProps<"/operator/knowl
     updatedAt: d.source_updated_at ?? d.updated_at,
     held: held.get(d.id) ?? 0,
   }));
-  return <KnowledgeView docs={items} initialId={typeof doc === "string" ? doc : null} />;
+  return <KnowledgeView docs={items} initialId={typeof doc === "string" ? doc : null} hours={(school.data?.hours ?? {}) as WeeklyHours} />;
 }

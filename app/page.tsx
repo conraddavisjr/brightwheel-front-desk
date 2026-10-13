@@ -1,6 +1,7 @@
 import { BookOpenCheck, CalendarDays, MessageCircleQuestion, ShieldCheck, Sparkles, Mic, Inbox, PlugZap } from "lucide-react";
 import { Wordmark } from "@/components/brand/WheelMark";
 import { DemoDoor } from "@/components/landing/DemoDoor";
+import { DemoCard } from "@/components/landing/DemoCard";
 import { SmoothLink } from "@/components/landing/SmoothLink";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Pill } from "@/components/ui/Pill";
@@ -34,31 +35,23 @@ export default function Landing() {
         </section>
 
         <section aria-label="Choose a perspective" className="grid gap-5 lg:grid-cols-2">
-          <article className="rounded-[28px] bg-surface p-5 shadow-2 ring-1 ring-line-soft sm:p-7">
-            <div className="flex items-center justify-between">
+          <DemoCard school="harbor-kids" role="parent" cta="View the parent's experience" person={{ name: "Maya Chen-Ortiz", firstName: "Maya", hue: 340 }} detail="Lucas's parent">
+            <span className="flex items-center justify-between">
               <h2 className="text-title-2 font-bold">Parent experience</h2>
               <Pill tone="accent">Mobile first</Pill>
-            </div>
+            </span>
             <p className="mt-2 text-dense text-muted">Ask anything by text, voice or a guided flow. Answers cite the school&apos;s own documents, and anything uncertain goes to staff.</p>
             <ParentPreview />
-            <div className="mt-5 grid gap-2.5">
-              <DemoDoor school="harbor-kids" role="parent" title="Chat with Harbor Kids" person={{ name: "Maya Chen-Ortiz", firstName: "Maya", hue: 340 }} detail="Lucas's parent" variant="secondary" />
-              <DemoDoor school="sunflower-valley" role="parent" title="Chat with Sunflower Valley" person={{ name: "Priya Raman", firstName: "Priya", hue: 12 }} detail="Leo's parent" variant="secondary" />
-            </div>
-          </article>
+          </DemoCard>
 
-          <article className="rounded-[28px] bg-surface p-5 shadow-2 ring-1 ring-line-soft sm:p-7">
-            <div className="flex items-center justify-between">
+          <DemoCard school="harbor-kids" role="director" cta="View the operator's experience" person={{ name: "Gretchen Lindqvist", firstName: "Gretchen", hue: 187 }} detail="director">
+            <span className="flex items-center justify-between">
               <h2 className="text-title-2 font-bold">Operator experience</h2>
               <Pill tone="teal">For directors</Pill>
-            </div>
+            </span>
             <p className="mt-2 text-dense text-muted">Connect Notion, Google Drive and Calendar. Privacy Guard holds anything sensitive before families can search it. See every question and fix gaps fast.</p>
             <OperatorPreview />
-            <div className="mt-5 grid gap-2.5">
-              <DemoDoor school="harbor-kids" role="director" title="Manage Harbor Kids" person={{ name: "Gretchen Lindqvist", firstName: "Gretchen", hue: 187 }} detail="Notion, Drive and Calendar" variant="secondary" />
-              <DemoDoor school="sunflower-valley" role="director" title="Manage Sunflower Valley" person={{ name: "Marisol Okafor", firstName: "Marisol", hue: 268 }} detail="Notion only" variant="secondary" />
-            </div>
-          </article>
+          </DemoCard>
         </section>
 
         <section id="how" className="mt-16 scroll-mt-8">
@@ -74,6 +67,24 @@ export default function Landing() {
               </li>
             ))}
           </ul>
+        </section>
+
+        {/* A second way in, for anyone who scrolled past the top. */}
+        <section aria-label="Try it" className="mt-16 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-[24px] bg-surface p-5 shadow-1 ring-1 ring-line-soft sm:p-6">
+            <h2 className="text-title-2 font-bold">Try the parent experience</h2>
+            <p className="mt-1 text-dense text-muted">Ask by text or voice and get a cited answer from the school&apos;s own documents.</p>
+            <div className="mt-4 grid gap-2.5">
+              <DemoDoor school="harbor-kids" role="parent" title="Chat with Harbor Kids" person={{ name: "Maya Chen-Ortiz", firstName: "Maya", hue: 340 }} detail="Lucas's parent" variant="secondary" />
+            </div>
+          </div>
+          <div className="rounded-[24px] bg-surface p-5 shadow-1 ring-1 ring-line-soft sm:p-6">
+            <h2 className="text-title-2 font-bold">Try the operator experience</h2>
+            <p className="mt-1 text-dense text-muted">See what families ask, answer the gaps, and decide what Privacy Guard holds.</p>
+            <div className="mt-4 grid gap-2.5">
+              <DemoDoor school="harbor-kids" role="director" title="Manage Harbor Kids" person={{ name: "Gretchen Lindqvist", firstName: "Gretchen", hue: 187 }} detail="Notion, Drive and Calendar" variant="secondary" />
+            </div>
+          </div>
         </section>
       </main>
       <Disclaimer />

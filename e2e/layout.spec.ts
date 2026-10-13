@@ -25,7 +25,11 @@ for (const [path, school, role] of PAGES) {
     const overflow = await page.evaluate(() => {
       const vw = document.documentElement.clientWidth;
       const wide = [...document.querySelectorAll("body *")]
-        .filter((el) => getComputedStyle(el).position !== "fixed" && !el.closest('[role="dialog"]'))
+        // Fixed bars (and anything inside them) can't make the page scroll sideways.
+        .filter((el) => {
+          for (let n: Element | null = el; n; n = n.parentElement) if (getComputedStyle(n).position === "fixed") return false;
+          return !el.closest('[role="dialog"]');
+        })
         .filter((el) => el.getBoundingClientRect().right > vw + 0.5)
         .slice(0, 3)
         .map((el) => `${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 30)}"`);

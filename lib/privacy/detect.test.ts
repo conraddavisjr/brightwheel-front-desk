@@ -37,7 +37,13 @@ describe("detect", () => {
   it("finds door and alarm codes in messy notes", () => {
     const f = detect("btw alarm code is 2580, gate code 1129 - don't share");
     expect(f.filter((x) => x.category === "facility_security").map((x) => x.excerpt)).toEqual(["alarm code is 2580", "gate code 1129"]);
-    expect(f.some((x) => x.category === "embargoed")).toBe(true);
+    // "don't share" also reads as unannounced news, but the codes are the specific, accurate label.
+    expect(f.some((x) => x.category === "embargoed")).toBe(false);
+  });
+
+  it("keeps a broad finding when stronger ones cover little of it", () => {
+    const text = "DO NOT SHARE: we are raising tuition 6% in January. Staff wifi password is otters2026.";
+    expect(cats(text)).toEqual(expect.arrayContaining(["embargoed", "credentials"]));
   });
 
   it("holds a whole sentence about custody", () => {
@@ -94,5 +100,16 @@ describe("suggestVisibility", () => {
   });
   it("keeps a handbook family-visible", () => {
     expect(suggestVisibility("Family Handbook", "Hours are 7 to 6.", []).visibility).toBe("family");
+  });
+});
+
+describe("names in sibling bullets", () => {
+  it("does not tie a general allergy note to a name in another bullet", () => {
+    const text = "### stuff parents always ask\n- yes we take subsidy (talk to Gretchen)\n- we're peanut aware in Puffins room bc of a kiddo w/ severe allergy, no peanut stuff please";
+    expect(detect(text).filter((f) => f.category === "health_record")).toEqual([]);
+  });
+  it("still ties bullets to the name that introduces them", () => {
+    const text = "THEO RAMIREZ - Puffins\n- severe peanut allergy\n- EpiPen in the red pouch";
+    expect(detect(text).some((f) => f.category === "health_record")).toBe(true);
   });
 });

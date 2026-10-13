@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowUp, CheckCircle2, Clock3, HelpCircle, Mic, Sparkles, Stethoscope, ChevronRight, MessageCircle } from "lucide-react";
+import { ArrowRight, ArrowUp, CheckCircle2, Clock3, HelpCircle, Mic, Sparkles, Stethoscope, ChevronRight, MessageCircle, ShieldCheck } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
 import { possessive } from "@/lib/text";
@@ -208,8 +208,10 @@ export function ParentHome({ personId, school, parent, data, history }: { person
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-label="Answered" />
                   ) : q.outcome === "staff" ? (
                     <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-label="Answered by staff" />
-                  ) : (
+                  ) : q.outcome === "unsure" ? (
                     <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning-ink" aria-label="Sent to staff" />
+                  ) : (
+                    <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-label={q.outcome === "care" ? "Safety reply" : "Not something I can share"} />
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="block text-dense font-semibold text-ink">{q.question}</span>

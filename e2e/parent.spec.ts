@@ -11,6 +11,8 @@ test.beforeEach(async ({ page }) => {
 test("a cited answer from the school's own policy", async ({ page }) => {
   const card = await ask(page, "My son had a fever of 100.6 last night. Can he come in today?");
   await expect(card).toContainText(/24 hours|100\.4/);
+  // A disagreement between documents goes to the director, never to the parent.
+  await expect(card).not.toContainText(/disagree|outdated|conflict/i);
   await expect(card.getByText("Answered from")).toBeVisible();
   await card.getByRole("button", { name: /Illness Policy 2026/ }).first().click();
   await expect(page.getByRole("dialog", { name: "Where this answer came from" })).toBeVisible();
@@ -78,4 +80,11 @@ test("the ask bar clears with the X", async ({ page }) => {
   await page.getByRole("button", { name: "Clear question" }).click();
   await expect(input).toHaveValue("");
   await expect(input).toBeFocused();
+});
+
+test("typing doesn't light up the AI glow; it's for voice and answers", async ({ page }) => {
+  const input = page.getByLabel("Your question");
+  await input.click();
+  await input.fill("When is picture day?");
+  await expect(page.locator(".ai-ring")).toHaveCount(0);
 });

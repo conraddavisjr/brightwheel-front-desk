@@ -6,6 +6,8 @@ import { Lock, Users, Pencil, Plus, Loader2, ArrowUpRight, ShieldCheck, Archive,
 import { SearchBox } from "@/components/operator/InboxView";
 import { MarkdownView } from "@/components/operator/MarkdownView";
 import { BrandIcon, brandName } from "@/components/operator/BrandIcon";
+import { HoursPanel } from "@/components/operator/HoursPanel";
+import type { WeeklyHours } from "@/lib/answer/hours";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
 import { AnswerView } from "@/components/parent/AnswerView";
@@ -39,7 +41,7 @@ function subscribeWide(onChange: () => void) {
   return () => mq.removeEventListener("change", onChange);
 }
 
-export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId: string | null }) {
+export function KnowledgeView({ docs, initialId, hours }: { docs: DocItem[]; initialId: string | null; hours: WeeklyHours }) {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(initialId ?? docs.find((d) => d.visibility === "family" && !d.archived)?.id ?? null);
   const [mobileOpen, setMobileOpen] = useState(Boolean(initialId));
@@ -79,7 +81,11 @@ export function KnowledgeView({ docs, initialId }: { docs: DocItem[]; initialId:
         </div>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[320px_1fr]">
+      <div className="mt-5">
+        <HoursPanel hours={hours} />
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[320px_minmax(0,1fr)] [&>*]:min-w-0">
         <nav aria-label="Pages" className="rounded-[16px] bg-surface p-3 shadow-1 ring-1 ring-line-soft lg:sticky lg:top-6 lg:max-h-[calc(100dvh-140px)] lg:overflow-y-auto">
           <SearchBox value={q} onChange={setQ} placeholder="Find a page" />
           {groups.map((g) => (

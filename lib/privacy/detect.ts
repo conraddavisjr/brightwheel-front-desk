@@ -328,7 +328,8 @@ const DETECTORS: Detector[] = [
 export function namedPersonNear(text: string, start: number, end: number): boolean {
   const [s, e] = sentenceAround(text, start, end);
   // Widen to the whole line: notes often put the name before a dash or colon.
-  let lineStart = text.lastIndexOf("\n", s - 1) + 1;
+  const lineStart = text.lastIndexOf("\n", s - 1) + 1;
+  let intro = "";
   // A bullet belongs to the line that introduces its list ("THEO RAMIREZ - ..." then "- EpiPen in the red pouch").
   if (/^\s*[-*]\s/.test(text.slice(lineStart, lineStart + 4))) {
     let at = lineStart;
@@ -337,12 +338,14 @@ export function namedPersonNear(text: string, start: number, end: number): boole
       const line = text.slice(prev, at - 1);
       at = prev;
       if (!/^\s*[-*]\s/.test(line) && line.trim()) {
-        lineStart = prev;
+        // A heading ("### stuff parents always ask") introduces a topic, not a person.
+        if (!/^\s*#/.test(line)) intro = line;
         break;
       }
     }
   }
-  const words = text.slice(Math.min(s, lineStart), e).match(/[A-Za-z][A-Za-z']*/g) ?? [];
+  // Only this line and the line that introduces its list: names in sibling bullets are about other things.
+  const words = `${intro} ${text.slice(Math.min(s, lineStart), e)}`.match(/[A-Za-z][A-Za-z']*/g) ?? [];
   return words.some((w, i) => {
     const bare = w.replace(/'s$/i, "");
     const lower = bare.toLowerCase();
@@ -426,6 +429,13 @@ export function detect(text: string, ctx: DetectContext = {}): Finding[] {
  * categories on the same text both stay, because a director may treat them
  * differently.
  */
+/** Most specific first: when findings overlap, the director sees the label that says what it really is. */
+const PRIORITY: PrivacyCategory[] = ["credentials", "facility_security", "financial", "family_safety", "child_record", "health_record", "staff_hr", "personal_contact", "custom", "embargoed"];
+const rank = (c: string) => {
+  const i = PRIORITY.indexOf(c as PrivacyCategory);
+  return i === -1 ? PRIORITY.length : i;
+};
+
 export function mergeFindings(findings: Finding[]): Finding[] {
   const sorted = [...findings].sort((a, b) => a.start - b.start || b.end - a.end);
   const out: Finding[] = [];
@@ -433,7 +443,23 @@ export function mergeFindings(findings: Finding[]): Finding[] {
     const covered = out.some((o) => o.category === f.category && o.start <= f.start && o.end >= f.end);
     if (!covered) out.push(f);
   }
-  return out;
+  // A broad, vaguer finding mostly covered by more specific ones (e.g. "alarm code is 2580 - don't share"
+  // read as "not yet announced") is dropped: the text stays held, under the accurate label.
+  return out.filter((f) => {
+    const stronger = out.filter((o) => o !== f && rank(o.category) < rank(f.category) && o.start < f.end && o.end > f.start);
+    if (!stronger.length) return true;
+    let covered = 0;
+    let at = f.start;
+    for (const o of [...stronger].sort((a, b) => a.start - b.start)) {
+      const from = Math.max(at, o.start);
+      const to = Math.min(f.end, o.end);
+      if (to > from) {
+        covered += to - from;
+        at = to;
+      }
+    }
+    return covered / (f.end - f.start) < 0.5;
+  });
 }
 
 /** Replace held spans with a neutral marker. Used for everything written to the family index. */
@@ -454,7 +480,7 @@ export function mask(text: string, spans: Array<{ start: number; end: number }>)
   return out + text.slice(at);
 }
 
-const STAFF_ONLY_TITLE = /\b((?:room|classroom|teacher|staff) notes|payroll|incident report|injury report|custody|emergency contacts?|staff handbook|internal|scratchpad|confidential|personnel|background checks?|wages?|salar(?:y|ies)|performance review|board minutes|budget)\b/i;
+export const STAFF_ONLY_TITLE = /\b((?:room|classroom|teacher|staff) notes|payroll|incident report|injury report|custody|emergency contacts?|staff handbook|internal|scratchpad|confidential|personnel|background checks?|wages?|salar(?:y|ies)|performance review|board minutes|budget)\b/i;
 const HEAVY: PrivacyCategory[] = ["staff_hr", "financial", "family_safety", "child_record", "health_record", "credentials"];
 
 /**

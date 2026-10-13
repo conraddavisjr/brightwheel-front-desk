@@ -41,6 +41,9 @@ Find text that must NOT be shown to parents. Categories:
 - personal_contact: personal phone, email, address, birth date of a specific person
 - custom: matches one of the school's own rules listed below
 General policies that apply to every family (fever rules, tuition rates, menus, hours, the school's main phone) are NOT sensitive.
+Requirements and checklists that name a kind of document without anyone's details are NOT sensitive either:
+"bring a court order if there are pickup restrictions" or "immunization records are due by the first day" are policy.
+Flag a custody, health or incident detail only when it is about a specific person or family, or could identify one.
 Only report what is really there. Quote exactly. If nothing is sensitive, return an empty list.`;
 
 export async function classifySensitive(

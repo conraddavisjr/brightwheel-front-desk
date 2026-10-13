@@ -4,8 +4,8 @@ import { forwardRef, useState } from "react";
 import { ArrowUp, Mic, X, Square } from "lucide-react";
 
 /**
- * The glowing ask bar. At rest it is a calm white pill; when focused or
- * listening, the brand's AI gradient draws a ring around it and a soft glow
+ * The ask bar. At rest and while typing it is a calm white pill with a plain focus ring; while
+ * listening or answering, the brand's AI gradient draws a ring around it and a soft glow
  * blooms underneath, the one place the gradient lives on the parent screen.
  */
 export const AskBar = forwardRef<
@@ -23,7 +23,8 @@ export const AskBar = forwardRef<
   }
 >(function AskBar({ value, onChange, onSubmit, onMic, micSupported, listening, busy, onStop, placeholder }, ref) {
   const [focused, setFocused] = useState(false);
-  const glowing = focused || listening || busy;
+  // The AI glow marks the AI at work (listening, answering), not a parent typing.
+  const glowing = listening || busy;
   return (
     <form
       onSubmit={(e) => {
@@ -40,7 +41,7 @@ export const AskBar = forwardRef<
         style={{ background: "var(--ai-gradient-linear)" }}
       />
       <div
-        className={`relative flex h-14 items-center gap-1 rounded-full bg-surface pl-5 pr-1.5 transition-shadow duration-300 ${glowing ? "ai-ring shadow-ai" : "shadow-2 ring-1 ring-line"} ${focused ? "spin-gradient" : ""}`}
+        className={`relative flex h-14 items-center gap-1 rounded-full bg-surface pl-5 pr-1.5 transition-shadow duration-300 ${glowing ? "ai-ring shadow-ai" : focused ? "shadow-2 ring-2 ring-accent" : "shadow-2 ring-1 ring-line"} ${glowing && listening ? "spin-gradient" : ""}`}
         style={busy ? { animation: "spin-forever 2.4s linear infinite" } : undefined}
       >
         <label htmlFor="ask-input" className="sr-only">

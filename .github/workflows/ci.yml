@@ -51,13 +51,30 @@ jobs:
           npm run seed
           AI_STUB=1 EVAL_ENABLED=true EVAL_SECRET=e2e-eval npx next start -p 3300 &
           npx --yes wait-on@8.0.1 http://localhost:3300 --timeout 60000
-      - name: Evals (in-house harness, mock judge)
-        uses: conraddavisjr/ai-evals/.github/actions/run-evals@main
-        continue-on-error: true
+      # The in-house harness (github.com/conraddavisjr/ai-evals-cafe), pinned to a commit.
+      # Deterministic assertions gate the build: outcomes (answer, refuse, 911) and secrets that must
+      # never appear. The semantic judge here is the free mock; a live run uses Gemini.
+      - name: Check out the eval harness
+        uses: actions/checkout@v4
+        with:
+          repository: conraddavisjr/ai-evals-cafe
+          ref: 029eea3bf0d058cd9a3bac093f9a1fd65a496eed
+          path: .evals-harness
+      - name: Install the eval harness
+        working-directory: .evals-harness
+        run: |
+          npm install --global --silent "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]")"
+          pnpm install --frozen-lockfile --filter "@cafe/targets..."
+      - name: Evals (gates fail the build)
+        working-directory: .evals-harness/packages/targets
         env:
           FRONT_DESK_URL: http://localhost:3300
           EVAL_SECRET: e2e-eval
-        with:
-          config: evals/evals-cafe.config.json
-          subset: all
-          max-usd: "0"
+          INIT_CWD: ${{ github.workspace }}
+        run: mkdir -p "$GITHUB_WORKSPACE/evals-report" && node --import tsx src/cli.ts --config "$GITHUB_WORKSPACE/evals/evals-cafe.config.json" --no-persist --junit "$GITHUB_WORKSPACE/evals-report/junit.xml" --summary "$GITHUB_WORKSPACE/evals-report/summary.md"
+      - name: Eval summary
+        if: always()
+        run: cat evals-report/summary.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: evals-report, path: evals-report, retention-days: 7 }

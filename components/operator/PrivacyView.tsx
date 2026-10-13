@@ -132,7 +132,12 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
       setRuleOverride((o) => ({ ...o, [r.id]: !next }));
       return toast({ tone: "danger", title: "That didn't save. Try again." });
     }
-    toast({ tone: "neutral", title: next ? `"${r.name}" is on` : `"${r.name}" is off for new content` });
+    const j = (await res.json().catch(() => ({}))) as { held?: number };
+    toast({
+      tone: "neutral",
+      title: next ? `"${r.name}" is on` : `"${r.name}" is off for new content`,
+      body: next ? (j.held ? `It found ${j.held} item${j.held > 1 ? "s" : ""} in your documents, now held for review.` : "Existing documents were checked; nothing new matched.") : undefined,
+    });
     router.refresh();
   }
   const rulesOn = rules.filter(ruleOn).length;

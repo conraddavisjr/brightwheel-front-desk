@@ -10,9 +10,9 @@ import { answerableFollowUps } from "@/lib/answer/followUps";
 import { openerFor, utteranceKind, looksSpanish } from "@/lib/answer/fillers";
 import { routeCard, type SchoolContact } from "@/lib/answer/routeReplies";
 import { asksForHours, dayAsked, hoursFacts, hoursHeadline, openNow, type WeeklyHours } from "@/lib/answer/hours";
-import { detect } from "@/lib/privacy/detect";
+import { closureOn } from "@/lib/answer/closures";
+import { detect, mask } from "@/lib/privacy/detect";
 import type { AnswerCard, AskEvent, ModelAnswer } from "@/lib/schemas";
-import { zonedMidnight } from "@/lib/time";
 
 /**
  * One question, end to end. Yields stream events as it goes so the parent
@@ -70,6 +70,28 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   const question = input.question.replace(/\s+/g, " ").trim().slice(0, config.limits.questionMaxChars);
   const persist = input.persist !== false;
 
+  // Life safety comes before everything else, rate limits and the database included: the 911 reply
+  // must show even when a limit is hit or the database is down. Saving it is best effort, afterwards.
+  const r = route(question);
+  if (r.action === "care") {
+    const school = await loadSchool(input.schoolId).catch(() => null);
+    const card = routeCard(r, school ?? { name: "the school", shortName: "the school", phone: null, email: null });
+    let conversationId = "care";
+    let messageId = "care";
+    if (persist) {
+      try {
+        conversationId = await ensureConversation(input);
+        await saveMessage(conversationId, input.schoolId, { role: "parent", text: question, author_id: input.parentId });
+        messageId = await saveMessage(conversationId, input.schoolId, { role: "assistant", text: `${card.headline} ${card.body}`, card, outcome: card.outcome, reason: `care:${r.kind}`, topic: "safety", citations: [], latency_ms: Date.now() - t0 });
+      } catch (err) {
+        console.error("[ask] could not save a care reply", err);
+      }
+    }
+    yield { type: "start", conversationId };
+    yield { type: "done", messageId, card, topic: "safety", latencyMs: Date.now() - t0 };
+    return;
+  }
+
   // Rate limits: per parent (or IP) per 10 minutes, and per IP per day.
   const who = input.parentId ?? `ip:${input.ip}`;
   const [burst, daily] = await Promise.all([
@@ -86,8 +108,9 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   yield { type: "start", conversationId };
   if (persist) await saveMessage(conversationId, input.schoolId, { role: "parent", text: question, author_id: input.parentId });
 
-  const kind = utteranceKind(question);
-  const opener = openerFor(question);
+  // Small talk and fillers only for ordinary questions: a refusal or handoff never starts with "Great question".
+  const kind = r.action === "answer" ? utteranceKind(question) : null;
+  const opener = r.action === "answer" ? openerFor(question) : null;
   if (opener) yield { type: "ack", text: opener };
 
   const topic = topicOf(question);
@@ -119,15 +142,18 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
     return;
   }
 
-  const r = route(question);
   if (r.action !== "answer") {
     yield { type: "status", phase: "checking", label: "Checking how best to help…" };
     yield* finish(routeCard(r, school), `${r.action}:${r.kind}`);
     return;
   }
 
+  // A follow-up ("And for three days?") is read with the question before it, for search and the model.
+  const earlier = persist && looksLikeFollowUp(question) ? await previousQuestion(conversationId, question) : null;
+  const asked = earlier ? `${earlier} ${question}` : question;
+
   // Opening hours are structured data the director owns: answered in code, instantly, with no search and no model.
-  if (Object.keys(school.hours).length > 0 && asksForHours(question)) {
+  if (Object.keys(school.hours).length > 0 && asksForHours(asked)) {
     // Lead with what was asked ("We close at 5:30pm today"); the weekly table follows.
     const target = dayAsked(question, new Date(), school.timezone);
     const closure = target ? await closureOn(input.schoolId, school.timezone, target.offset) : null;
@@ -146,7 +172,7 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   yield { type: "status", phase: "searching", label: looksSpanish(question) ? "Buscando en el manual…" : `Checking ${possessive(school.shortName)} handbook…` };
   let retrieval: Retrieval;
   try {
-    retrieval = await searchKnowledge(input.schoolId, question);
+    retrieval = await searchKnowledge(input.schoolId, asked);
   } catch (err) {
     console.error("[ask] search failed", err);
     yield { type: "error", message: "I couldn't reach the school's information just now. Please try again in a moment.", retryable: true };
@@ -159,22 +185,26 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
   }
 
   yield { type: "status", phase: "reading", label: "Reading the details…" };
-  const genInput = { question, schoolName: school.name, timezone: school.timezone, topic, retrieval, medicalCaveat: r.medicalCaveat };
+  const genInput = { question, earlier, schoolName: school.name, timezone: school.timezone, topic, retrieval, medicalCaveat: r.medicalCaveat };
   const gen = await generateAnswer(genInput);
   yield { type: "status", phase: "writing", label: "Putting it together…" };
 
   let lastSent = 0;
+  // Stream only when retrieval is strong: on a weak match the answer is more likely to be rejected by
+  // validation, so the parent waits for the checked card instead of reading a draft that disappears.
+  const streamDrafts = retrieval.strength === "strong";
   try {
     for await (const partial of gen.partials) {
+      if (!streamDrafts) continue;
       const now = Date.now();
       if (now - lastSent < 60) continue;
       lastSent = now;
-      // Never stream text Privacy Guard would stop.
-      if (!isClean(`${partial.headline ?? ""} ${partial.body ?? ""}`, school)) continue;
-      yield {
-        type: "partial",
-        card: { kind: partial.kind, headline: partial.headline ?? "", body: partial.body ?? "", facts: (partial.facts ?? []).filter((f) => f?.label && f?.value) as AnswerCard["facts"], steps: (partial.steps ?? []).filter((s) => s?.title) as AnswerCard["steps"] },
-      };
+      const facts = (partial.facts ?? []).filter((f) => f?.label && f?.value) as AnswerCard["facts"];
+      const steps = (partial.steps ?? []).filter((s) => s?.title) as AnswerCard["steps"];
+      // Never stream text Privacy Guard would stop, in any part of the card.
+      const text = [partial.headline, partial.body, ...facts.map((f) => `${f.label} ${f.value}`), ...steps.map((s) => `${s.title} ${s.detail ?? ""}`)].join(" ");
+      if (!isClean(text, school)) continue;
+      yield { type: "partial", card: { kind: partial.kind, headline: partial.headline ?? "", body: partial.body ?? "", facts, steps } };
     }
   } catch (err) {
     console.error("[ask] stream interrupted", err);
@@ -246,9 +276,10 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
     if (!a.headline || !/\d/.test(a.headline)) card.headline = weekday ? `We're open ${weekday.label}, ${weekday.value}.` : card.openNow.label;
     card.steps = [];
   }
-  if (r.conflict) {
-    card.body = `${card.body} Heads up: two of the school's documents disagree on this, so we've asked the director to confirm.`.trim();
-  }
+  // A disagreement between documents is the director's to fix (it goes to their Inbox), not the parent's to read.
+
+  // A table says it better: with facts to show, the headline and the table are the answer, not prose repeating them.
+  if (card.facts.length >= 2 && card.kind !== "hours") card.body = "";
   if (medicalCaveat) {
     card.body = `${card.body} For medical advice, please check with your pediatrician.`.trim();
   }
@@ -256,24 +287,25 @@ export function buildCard(a: ModelAnswer, r: Retrieval, school: School, medicalC
 }
 
 async function unsure(question: string, topic: string, input: AskInput, school: School, r: Retrieval | null, persist: boolean): Promise<AnswerCard> {
-  let logged = false;
-  if (persist) {
-    await recordGap(input.schoolId, question, normalizeQuestion(question), topic, input.parentId, null);
-    logged = true;
-  }
+  // Only say it was passed on if it really was (eval runs don't save, so they keep the usual wording).
+  const logged = persist ? await recordGap(input.schoolId, question, normalizeQuestion(question), topic, input.parentId, null) : false;
+  const passedOn = logged || !persist;
   return {
     ...emptyCard(),
     outcome: "unsure",
     kind: "contact",
     headline: `I don't have that in ${possessive(school.shortName)} information yet.`,
-    body: "I've passed your question to the front desk so they can answer it and add it for other families. You'll get a reply in the brightwheel app.",
+    body: passedOn
+      ? "I've passed your question to the front desk so they can answer it and add it for other families. You'll get a reply in the brightwheel app."
+      : "I couldn't pass this to the front desk just now. Please message or call them below.",
     // Checked school suggestions fill this row (see answerableFollowUps).
     followUps: [],
     handoff: { reason: "Not in the school's information", phone: school.phone, email: school.email, gapLogged: logged },
   };
 }
 
-async function recordGap(schoolId: string, question: string, normalized: string, topic: string, askerId: string | null, note: string | null) {
+/** Log a question the documents don't answer for the director's Inbox. True when it was saved. */
+async function recordGap(schoolId: string, question: string, normalized: string, topic: string, askerId: string | null, note: string | null): Promise<boolean> {
   try {
     const { error } = await db().rpc("record_gap", {
       p_school: schoolId,
@@ -285,14 +317,19 @@ async function recordGap(schoolId: string, question: string, normalized: string,
       p_note: note,
     });
     if (error) throw error;
+    return true;
   } catch (err) {
     console.error("[gaps] record failed", err);
+    return false;
   }
 }
 
+/** Any finding at all blocks the line; only the school's own published contacts are allowed through. */
+function findings(text: string, school: School) {
+  return text.trim() ? detect(text, { allow: [school.phone, school.email, school.address].filter(Boolean) as string[] }) : [];
+}
 function isClean(text: string, school: School): boolean {
-  if (!text.trim()) return true;
-  return detect(text, { allow: [school.phone, school.email, school.address].filter(Boolean) as string[] }).filter((f) => f.confidence >= 0.8).length === 0;
+  return findings(text, school).length === 0;
 }
 
 /** Last line of defense: drop any line Privacy Guard objects to. */
@@ -305,6 +342,14 @@ function scrubCard(card: AnswerCard, school: School): AnswerCard {
     body: ok(card.body) ? card.body : "",
     facts: card.facts.filter((f) => ok(`${f.label} ${f.value}`)),
     steps: card.steps.filter((s) => ok(`${s.title} ${s.detail}`)),
+    // Events were screened at sync; check again here, as the last line before a family sees it.
+    events: card.events.filter((e) => ok(`${e.title} ${e.location ?? ""} ${e.description ?? ""}`)),
+    // Source excerpts are shown in "Where this answer came from": mask anything held.
+    citations: card.citations.map((c) => {
+      const found = findings(c.excerpt, school);
+      return found.length ? { ...c, excerpt: mask(c.excerpt, found) } : c;
+    }),
+    followUps: card.followUps.filter(ok),
   };
 }
 
@@ -329,19 +374,16 @@ async function saveMessage(conversationId: string, schoolId: string, m: Record<s
   return row.id;
 }
 
-/** A closure on the school calendar for a day (0 = today), like "Veterans Day". */
-async function closureOn(schoolId: string, tz: string, offset: number): Promise<string | null> {
-  const day = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + offset * 86400000));
-  const start = zonedMidnight(day, tz);
-  const end = new Date(start.getTime() + 86400000);
-  const { data } = await db()
-    .from("events")
-    .select("title")
-    .eq("school_id", schoolId)
-    .eq("visibility", "family")
-    .lt("starts_at", end.toISOString())
-    .gte("ends_at", start.toISOString())
-    .limit(10);
-  const hit = (data ?? []).find((e) => /\b(closed|closure|no school)\b/i.test(e.title));
-  return hit ? hit.title.replace(/^\s*(closed|closure)\s*[-:·]\s*/i, "").trim() || "a school closure" : null;
+/** Short or leaning on what came before: "And for three days?", "What about Fridays?", "How much is that?" */
+export function looksLikeFollowUp(q: string): boolean {
+  const t = q.trim().toLowerCase();
+  if (/^(and|also|what about|how about|same|then|but|or|for|on|what if|is that|does that|how much is that|and if)\b/.test(t)) return true;
+  // A short fragment ("Fridays?", "three days?") leans on context; a short real question ("When is picture day?") doesn't.
+  return t.split(/\s+/).length <= 3 && !/^(what|when|where|who|why|how|is|are|do|does|can|will|should)\b/.test(t);
+}
+
+async function previousQuestion(conversationId: string, current: string): Promise<string | null> {
+  const { data } = await db().from("messages").select("text").eq("conversation_id", conversationId).eq("role", "parent").is("reason", null).order("created_at", { ascending: false }).limit(3);
+  const prior = (data ?? []).map((m) => m.text as string).find((t) => t.trim() !== current.trim());
+  return prior ?? null;
 }

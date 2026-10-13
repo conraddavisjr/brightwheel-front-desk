@@ -1,12 +1,15 @@
 /*
  * Front Desk service worker. Small on purpose:
  * - static build assets and icons: cache first (they are content-hashed)
- * - pages: network first, falling back to the last copy, then /offline
+ * - pages: network first; only the public landing page is kept for offline. Signed-in pages
+ *   (/ask, /operator) are personal, so they are never cached: on a shared device the next
+ *   person must never see the last person's page. Offline, they fall back to /offline.
  * - API calls: never cached (answers must be fresh, and they carry private data)
  * The parent app also keeps its last answers in localStorage, so a parent
  * who opens it on a bad connection still sees what they asked.
  */
-const VERSION = "fd-v1";
+// v2: earlier versions cached /ask; bumping the version deletes those copies on activate.
+const VERSION = "fd-v2";
 const STATIC = `${VERSION}-static`;
 const PAGES = `${VERSION}-pages`;
 const PRECACHE = ["/offline", "/icons/icon-192.png", "/manifest.webmanifest"];
@@ -48,7 +51,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (res.ok && (url.pathname === "/ask" || url.pathname === "/")) caches.open(PAGES).then((c) => c.put(req, res.clone()));
+          if (res.ok && url.pathname === "/") caches.open(PAGES).then((c) => c.put(req, res.clone()));
           return res;
         })
         .catch(() => caches.match(req).then((hit) => hit || caches.match("/offline"))),

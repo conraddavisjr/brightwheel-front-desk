@@ -81,7 +81,7 @@ async function Dashboard() {
           <span className="min-w-0 flex-1">
             <span className="block text-caption font-semibold uppercase tracking-[0.08em] text-ai-ink">Spotlight</span>
             <span className="mt-0.5 block text-headline font-semibold text-ink">
-              {hot.ask_count} families asked &ldquo;{hot.question}&rdquo; and we had no answer.
+              &ldquo;{hot.question}&rdquo; was asked {hot.ask_count} times{hot.asker_ids.length > 1 ? ` by ${hot.asker_ids.length} families` : ""}, and we had no answer.
             </span>
             <span className="block text-dense text-muted">Answer it once and Front Desk handles it from now on.</span>
           </span>
@@ -91,7 +91,7 @@ async function Dashboard() {
 
       <section aria-label="Key numbers" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat icon={MessageCircleQuestion} tint="bg-accent-tint text-accent" label="Questions answered" value={st.answered.toLocaleString()} sub={`of ${st.questions.toLocaleString()} asked`} trend={st.trend} />
-        <Stat icon={Bot} tint="bg-teal-tint text-teal-ink" label="Resolved without staff" value={pct(st.deflection)} sub={`${st.unsure + st.handedOff} went to a person`} />
+        <Stat icon={Bot} tint="bg-teal-tint text-teal-ink" label="Answered without staff" value={pct(st.deflection)} sub={`${st.unsure + st.handedOff} went to a person`} />
         <Stat icon={Clock} tint="bg-success-tint text-success-ink" label="Staff time saved" value={`${st.hoursSaved}h`} sub="at 4 min per question" />
         <Stat icon={ThumbsUp} tint="bg-pink-tint text-pink-ink" label="Rated helpful" value={st.helpfulRate === null ? "-" : pct(st.helpfulRate)} sub={`${st.ratings} ratings`} />
       </section>

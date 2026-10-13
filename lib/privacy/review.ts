@@ -1,6 +1,6 @@
 import "server-only";
 import { db, must } from "@/lib/db/client";
-import { reindexDocument } from "@/lib/ingest/ingest";
+import { reindexDocument, schoolPrivacyContext } from "@/lib/ingest/ingest";
 import { detect } from "@/lib/privacy/detect";
 
 export type ReviewAction = "redact" | "staff_only" | "dismiss";
@@ -26,16 +26,19 @@ export async function reviewFindings(schoolId: string, personId: string, ids: st
 }
 
 /** Run one new rule over every active document of the school. Returns how many new items were held. */
-export async function applyRule(schoolId: string, rule: { id: string; name: string; description: string; pattern: string | null; category: string }): Promise<number> {
+export async function applyRule(schoolId: string, rule: { id: string; name: string; description: string; pattern: string | null; category: string; preset?: boolean }): Promise<number> {
   const docs = must(await db().from("documents").select("id,content,visibility").eq("school_id", schoolId).eq("status", "active"), "documents") as Array<{ id: string; content: string; visibility: string }>;
   let held = 0;
+  // The school's own published contacts are never "personal" (same allow list ingest uses).
+  const { allow } = rule.preset ? await schoolPrivacyContext(schoolId) : { allow: undefined };
   for (const d of docs) {
-    const found = detect(d.content, { rules: [{ ...rule, enabled: true }] }).filter((f) => f.ruleId === rule.id);
+    // A built-in rule matches through its category's built-in detectors; a director's rule through its own words.
+    const found = rule.preset ? detect(d.content, { allow }).filter((f) => f.category === rule.category && !f.ruleId) : detect(d.content, { rules: [{ ...rule, enabled: true }] }).filter((f) => f.ruleId === rule.id);
     if (found.length === 0) continue;
     const rows = found.map((f) => ({
       school_id: schoolId,
       document_id: d.id,
-      rule_id: rule.id,
+      rule_id: rule.preset ? null : rule.id,
       category: f.category,
       label: f.label,
       span_start: f.start,

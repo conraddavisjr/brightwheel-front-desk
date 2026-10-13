@@ -94,3 +94,39 @@ test("the sick check from home asks its question in the chat drawer", async ({ p
   await expect(chat.getByLabel("Your question")).toBeInViewport();
   await expect(chat.locator("li[id^='turn-']").last()).toContainText(/Lucas/, { timeout: 20_000 });
 });
+
+test("a staff answer that contains a code is withheld on the parent's home", async ({ page, browser }) => {
+  const q = test.info().project.name === "desktop" ? "Can I come in early for the book fair setup?" : "Can I drop off donations before school?";
+  await page.goto("/ask/chat");
+  await expect(await ask(page, q)).toContainText("don't have that");
+
+  const director = await browser.newPage();
+  await signIn(director, "harbor-kids", "director");
+  await director.goto("/operator/inbox");
+  await director.getByText(q).first().click();
+  await director.getByLabel("Answer, in your words").fill("Yes, come in through the side door. The gate code is 1129.");
+  await director.getByRole("button", { name: "Publish answer" }).click();
+  await expect(director.getByText(/Published/)).toBeVisible({ timeout: 15_000 });
+  await director.close();
+
+  await page.goto("/ask");
+  const reply = page.getByRole("region", { name: /From the front desk/ }).getByRole("listitem").filter({ hasText: q });
+  await expect(reply).toContainText("[withheld]");
+  await expect(reply).not.toContainText("1129");
+});
+
+test("the chat drawer opens at the latest answer, shows times, and swipes closed on a phone", async ({ page }) => {
+  const chat = page.getByRole("dialog", { name: "Chat with Harbor Kids" });
+  await page.getByRole("button", { name: /Ask Harbor Kids anything/ }).click();
+  await expect(chat.locator('li[id^="turn-"]').last()).toBeInViewport();
+  await expect(chat.locator("li[id^='turn-'] time").first()).toHaveAttribute("datetime", /\d{4}-\d{2}-\d{2}T/);
+
+  test.skip(test.info().project.name !== "phone", "swipe is a touch gesture");
+  const handle = chat.getByRole("navigation", { name: "Breadcrumb" });
+  const box = (await handle.boundingBox())!;
+  await page.mouse.move(box.x + box.width - 20, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width - 20, box.y + 260, { steps: 8 });
+  await page.mouse.up();
+  await expect(chat.getByLabel("Your question")).not.toBeInViewport();
+});

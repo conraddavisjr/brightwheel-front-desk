@@ -1,5 +1,7 @@
 import "server-only";
 import { db, must } from "@/lib/db/client";
+import { schoolPrivacyContext } from "@/lib/ingest/ingest";
+import { detect, mask } from "@/lib/privacy/detect";
 
 export interface StaffReply {
   id: string;
@@ -22,6 +24,7 @@ export interface ThreadTurn {
   card: Record<string, unknown>;
   messageId: string | null;
   feedback: 1 | -1 | null;
+  at: string;
 }
 export interface RecentQuestion {
   id: string;
@@ -39,7 +42,7 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
   const client = db();
   const [convs, gaps] = await Promise.all([
     client.from("conversations").select("id").eq("school_id", schoolId).eq("parent_id", parentId).order("last_at", { ascending: false }).limit(60),
-    client.from("gaps").select("id,question,status,answer,answered_by,answered_at,first_asked_at,last_asked_at").eq("school_id", schoolId).eq("kind", "question").contains("asker_ids", [parentId]),
+    client.from("gaps").select("id,question,status,answer,answer_document_id,answered_by,answered_at,first_asked_at,last_asked_at").eq("school_id", schoolId).eq("kind", "question").contains("asker_ids", [parentId]),
   ]);
   const convIds = (must(convs, "conversations") as Array<{ id: string }>).map((c) => c.id);
   const msgs = convIds.length
@@ -48,7 +51,7 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
         "messages",
       ) as Array<{ id: string; conversation_id: string; role: string; text: string; outcome: string | null; reason: string | null; author_id: string | null; created_at: string; card: ({ headline?: string } & Record<string, unknown>) | null; feedback: 1 | -1 | null }>)
     : [];
-  const gapRows = must(gaps, "gaps") as Array<{ id: string; question: string; status: string; answer: string | null; answered_by: string | null; answered_at: string | null; first_asked_at: string; last_asked_at: string }>;
+  const gapRows = must(gaps, "gaps") as Array<{ id: string; question: string; status: string; answer: string | null; answer_document_id: string | null; answered_by: string | null; answered_at: string | null; first_asked_at: string; last_asked_at: string }>;
 
   const staffIds = [...new Set([...gapRows.map((g) => g.answered_by), ...msgs.filter((m) => m.role === "staff").map((m) => m.author_id)].filter((x): x is string => Boolean(x)))];
   const staff = staffIds.length ? (must(await client.from("people").select("id,name,avatar_hue").in("id", staffIds), "people") as Array<{ id: string; name: string; avatar_hue: number }>) : [];
@@ -57,10 +60,24 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
     return p ? { name: p.name, hue: p.avatar_hue } : null;
   };
 
+  // A published staff answer goes through Privacy Guard before families see it, exactly like the
+  // knowledge page it became: anything held there is withheld here too.
+  const ctx = await schoolPrivacyContext(schoolId);
+  const answerDocs = gapRows.map((g) => g.answer_document_id).filter((x): x is string => Boolean(x));
+  const heldText = answerDocs.length
+    ? ((await client.from("findings").select("excerpt").in("document_id", answerDocs).neq("status", "dismissed")).data ?? []).map((f) => f.excerpt as string).filter((x) => x.trim().length > 2)
+    : [];
+  const guarded = (text: string) => {
+    let out = text;
+    for (const x of heldText) out = out.split(x).join("[withheld]");
+    const found = detect(out, ctx);
+    return found.length ? mask(out, found) : out;
+  };
+
   const replies: StaffReply[] = [];
   const pending: Pending[] = [];
   for (const g of gapRows) {
-    if (g.status === "answered" && g.answer && g.answered_at) replies.push({ id: `gap:${g.id}`, kind: "answer", about: g.question, text: g.answer, at: g.answered_at, by: who(g.answered_by) });
+    if (g.status === "answered" && g.answer && g.answered_at) replies.push({ id: `gap:${g.id}`, kind: "answer", about: g.question, text: guarded(g.answer), at: g.answered_at, by: who(g.answered_by) });
     else if (g.status === "open") pending.push({ id: `gap:${g.id}`, kind: "question", text: g.question, at: g.last_asked_at });
   }
 
@@ -68,7 +85,7 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
   const byConv = new Map<string, typeof msgs>();
   for (const m of msgs) byConv.set(m.conversation_id, [...(byConv.get(m.conversation_id) ?? []), m]);
   const recent: RecentQuestion[] = [];
-  const turns: Array<ThreadTurn & { at: string }> = [];
+  const turns: ThreadTurn[] = [];
   for (const thread of byConv.values()) {
     thread.forEach((m, i) => {
       if (m.role === "parent" && m.reason === "to_staff") {
@@ -113,6 +130,6 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
     return true;
   });
   // The chat drawer's thread: the last 20 questions, oldest first, so the newest sits by the input.
-  const chat = newest(turns).slice(0, 20).reverse().map((t) => ({ id: t.id, question: t.question, card: t.card, messageId: t.messageId, feedback: t.feedback }));
+  const chat = newest(turns).slice(0, 20).reverse();
   return { replies: newest(replies).slice(0, 4), pending: newest(pending).slice(0, 4), recent: uniqueRecent.slice(0, 5), thread: chat };
 }

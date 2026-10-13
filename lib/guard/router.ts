@@ -16,10 +16,12 @@ export type Route =
 const any = (res: RegExp[], q: string) => res.some((r) => r.test(q));
 
 const EMERGENCY = [
-  /\b(not breathing|can'?t breathe|stopped breathing|choking|unconscious|unresponsive|won'?t wake|can'?t wake|passed out|seizing|having a seizure)\b/i,
+  /\b(not breathing|can'?t breathe|cannot breathe|can not breathe|(trouble|struggling|hard time|difficulty) breathing|stopped breathing|choking|turning blue|lips (are |look )?blue|unconscious|unresponsive|won'?t wake|can'?t wake|passed out|seizing|having a seizure)\b/i,
   /\b(anaphyla\w*|allergic reaction|throat (is )?(closing|swelling)|swallowed (a |some )?(battery|magnet|pills?|bleach|poison)|poison(ed|ing)?\b)/i,
   /\b(bleeding (a lot|heavily|badly|won'?t stop)|severe bleeding|head injury|hit (his|her|their) head .*(vomit|sleepy|confused))/i,
   /\b(call 911|emergency room|this is an emergency|it'?s an emergency)\b/i,
+  // Spanish: the most common ways a parent would say it.
+  /\b(no puede respirar|no respira|se est[aá] ahogando|se atragant\w*|est[aá] inconsciente|no despierta|convulsi\w*|reacci[oó]n al[eé]rgica|es una emergencia|llam(a|e|o|ar) al 911)\b/i,
 ];
 
 const WELLBEING = [

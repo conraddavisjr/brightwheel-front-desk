@@ -24,12 +24,25 @@ export type AiKind = "answer" | "classify" | "embed" | "tts" | "ocr";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-/** True when a live call is allowed right now (key present, not stubbed, under today's cap). */
+/**
+ * Claim one live model call for today (key present, not stubbed, under the daily cap). The claim is
+ * atomic in Postgres, so concurrent requests can't overshoot the cap. Call it right before the call.
+ */
 export async function canCallModel(): Promise<boolean> {
   if (!aiLive()) return false;
-  const { data } = await db().from("ai_usage").select("calls").eq("day", today());
-  const calls = (data ?? []).reduce((s: number, r: { calls: number }) => s + r.calls, 0);
-  return calls < config.ai.dailyCallCap;
+  const { data, error } = await db().rpc("reserve_ai_call", { p_day: today(), p_cap: config.ai.dailyCallCap });
+  if (error) {
+    console.error("[ai] could not reserve a call; using the free path", error);
+    return false;
+  }
+  return data === true;
+}
+
+/** A read-only look at whether live calls are still available today (claims nothing). */
+export async function modelAvailable(): Promise<boolean> {
+  if (!aiLive()) return false;
+  const { data } = await db().from("ai_usage").select("calls").eq("day", today()).eq("kind", "reserved").maybeSingle();
+  return (data?.calls ?? 0) < config.ai.dailyCallCap;
 }
 
 export async function meter(kind: AiKind, inputTokens = 0, outputTokens = 0): Promise<void> {

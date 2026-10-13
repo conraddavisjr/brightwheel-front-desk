@@ -44,6 +44,19 @@ export interface Turn {
   messageId: string | null;
   feedback: 1 | -1 | null;
   error: string | null;
+  /** When it was asked (ISO), shown under the question. */
+  at?: string;
+}
+
+/** "2:41 PM", "Yesterday, 4:10 PM" or "Mon, Oct 12, 9:05 AM", in the parent's own time zone. */
+function when(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const day = (x: Date) => x.toDateString();
+  if (day(d) === day(now)) return time;
+  if (day(d) === day(new Date(now.getTime() - 86400000))) return `Yesterday, ${time}`;
+  return `${d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}, ${time}`;
 }
 
 const CHIPS = [
@@ -141,7 +154,7 @@ export function AskApp({
       if (!q || busy) return;
       stopSpeaking();
       const id = crypto.randomUUID();
-      setTurns((ts) => [...ts, { id, question: q, ack: null, status: null, card: {}, streaming: true, messageId: null, feedback: null, error: null }]);
+      setTurns((ts) => [...ts, { id, question: q, ack: null, status: null, card: {}, streaming: true, messageId: null, feedback: null, error: null, at: new Date().toISOString() }]);
       setInput("");
       setBusy(true);
       scrollToEnd();
@@ -319,7 +332,15 @@ export function AskApp({
           <ol className="space-y-5 pt-4">
             {turns.map((t) => (
               <li key={t.id} id={`turn-${t.id}`} className={`scroll-mt-4 space-y-2.5 rounded-[24px] transition-shadow duration-500 ${highlight === t.id ? "ring-2 ring-accent ring-offset-4 ring-offset-canvas" : ""}`}>
-                <div className="rise-in ml-auto w-fit max-w-[85%] rounded-[20px] rounded-br-md bg-accent px-4 py-2.5 text-body text-on-accent shadow-1">{t.question}</div>
+                <div className="ml-auto flex w-fit max-w-[85%] flex-col items-end gap-1">
+                  <div className="rise-in rounded-[20px] rounded-br-md bg-accent px-4 py-2.5 text-body text-on-accent shadow-1">{t.question}</div>
+                  {t.at ? (
+                    // Server and browser format times in different zones; the browser's is the one shown.
+                    <time dateTime={t.at} suppressHydrationWarning className="pr-1 text-[11px] text-muted">
+                      {when(t.at)}
+                    </time>
+                  ) : null}
+                </div>
                 {t.ack && t.streaming && !t.card.headline ? <p className="fade-in pl-1 text-dense text-muted">{t.ack}</p> : null}
                 {t.error ? (
                   <div role="alert" className="rounded-[16px] bg-danger-tint px-4 py-3 text-dense text-danger-ink">

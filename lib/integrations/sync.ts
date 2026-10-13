@@ -5,6 +5,7 @@ import { decrypt } from "@/lib/integrations/crypto";
 import { blocksToMarkdown, listSharedPages, notionClient } from "@/lib/integrations/notion";
 import { googleAccessToken, listCalendarEvents, readDriveFile, type CalEventIn } from "@/lib/integrations/google";
 import { parseIcal } from "@/lib/integrations/ical";
+import { screenEvent } from "@/lib/privacy/events";
 
 /**
  * Pull one source and push everything through ingest. Incremental: a page
@@ -109,22 +110,29 @@ async function run(src: SourceRow): Promise<SyncResult> {
 }
 
 async function upsertEvents(src: SourceRow, events: CalEventIn[]): Promise<SyncResult> {
-  const rows = events.map((e) => ({
-    school_id: src.school_id,
-    source_id: src.id,
-    external_id: e.id,
-    title: e.title,
-    starts_at: e.startsAt,
-    ends_at: e.endsAt,
-    all_day: e.allDay,
-    location: e.location,
-    description: e.description,
-    // Private calendar entries (staff meetings, reviews) never reach families.
-    visibility: e.private || /^staff[:\s]/i.test(e.title) ? "staff" : "family",
-  }));
+  let held = 0;
+  const ctx = await schoolPrivacyContext(src.school_id);
+  const rows = events.map((raw) => {
+    // Privacy Guard checks events too: codes or names in a description never reach families.
+    const e = screenEvent(raw, ctx);
+    held += e.held;
+    return {
+      school_id: src.school_id,
+      source_id: src.id,
+      external_id: e.id,
+      title: e.title,
+      starts_at: e.startsAt,
+      ends_at: e.endsAt,
+      all_day: e.allDay,
+      location: e.location,
+      description: e.description,
+      // Private calendar entries (staff meetings, reviews) and sensitive titles never reach families.
+      visibility: e.private || e.staffOnly || /^staff[:\s]/i.test(e.title) ? "staff" : "family",
+    };
+  });
   await db().from("events").delete().eq("source_id", src.id);
   if (rows.length) must(await db().from("events").insert(rows).select("id"), "events");
-  return { documents: 0, changed: rows.length, archived: 0, events: rows.length, held: 0 };
+  return { documents: 0, changed: rows.length, archived: 0, events: rows.length, held };
 }
 
 async function demoRefresh(src: SourceRow): Promise<SyncResult> {
