@@ -30,7 +30,11 @@ export interface AskParent {
   child: { name: string; room: string } | null;
 }
 
-interface Turn {
+/** What Home asks the embedded chat to do: ask something, show an earlier answer, or open the sick check. */
+export type ChatRequest = { kind: "ask"; q: string } | { kind: "show"; turnId: string; q: string } | { kind: "sick" } | { kind: "focus" };
+export type ChatCommand = ChatRequest & { n: number };
+
+export interface Turn {
   id: string;
   question: string;
   ack: string | null;
@@ -51,8 +55,34 @@ const CHIPS = [
   { label: "Tours", q: "How do I book a tour?", icon: Footprints, tint: "bg-info-tint text-info-ink" },
 ];
 
-export function AskApp({ school, parent, storageKey, initialQuestion = null, openSickCheck = false }: { school: AskSchool; parent: AskParent; storageKey: string; initialQuestion?: string | null; openSickCheck?: boolean }) {
-  const [turns, setTurns] = useState<Turn[]>([]);
+export function AskApp({
+  school,
+  parent,
+  storageKey,
+  initialQuestion = null,
+  openSickCheck = false,
+  embedded = false,
+  initialTurns = null,
+  command = null,
+}: {
+  school: AskSchool;
+  parent: AskParent;
+  storageKey: string;
+  initialQuestion?: string | null;
+  openSickCheck?: boolean;
+  /** Inside Home's chat drawer: no page header, and it fills the drawer instead of the screen. */
+  embedded?: boolean;
+  /** The parent's earlier questions and answers (from the server), so Home can point at one. */
+  initialTurns?: Turn[] | null;
+  command?: ChatCommand | null;
+}) {
+  const [turns, setTurns] = useState<Turn[]>(initialTurns ?? []);
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const hasHistory = initialTurns !== null;
+  const turnsRef = useRef(turns);
+  useEffect(() => {
+    turnsRef.current = turns;
+  }, [turns]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [voice, setVoice] = useState<null | "listening" | "thinking" | "speaking">(null);
@@ -71,7 +101,9 @@ export function AskApp({ school, parent, storageKey, initialQuestion = null, ope
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null") as { turns: Turn[]; conversationId: string | null } | null;
-      if (saved?.turns?.length) {
+      // With server history (Home's drawer), that is the thread; local storage only keeps the conversation going.
+      if (hasHistory) conversationId.current = saved?.conversationId ?? null;
+      else if (saved?.turns?.length) {
         setTurns(saved.turns.filter((t) => !t.streaming && !t.error));
         conversationId.current = saved.conversationId;
       }
@@ -86,7 +118,7 @@ export function AskApp({ school, parent, storageKey, initialQuestion = null, ope
       window.removeEventListener("online", update);
       window.removeEventListener("offline", update);
     };
-  }, [storageKey]);
+  }, [storageKey, hasHistory]);
 
   useEffect(() => {
     if (turns.some((t) => t.streaming)) return;
@@ -168,8 +200,28 @@ export function AskApp({ school, parent, storageKey, initialQuestion = null, ope
     void ask(initialQuestion);
   }, [initialQuestion, ask]);
   useEffect(() => {
-    if (openSickCheck) window.history.replaceState(window.history.state, "", "/ask/chat");
-  }, [openSickCheck]);
+    if (openSickCheck && !embedded) window.history.replaceState(window.history.state, "", "/ask/chat");
+  }, [openSickCheck, embedded]);
+
+  // Commands from Home: each new command number runs once.
+  const lastCommand = useRef(0);
+  useEffect(() => {
+    if (!command || command.n === lastCommand.current) return;
+    lastCommand.current = command.n;
+    if (command.kind === "ask") void ask(command.q);
+    else if (command.kind === "sick") setSickCheck(true);
+    else if (command.kind === "focus") requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+    else if (command.kind === "show") {
+      // By id for answers from the server; by question for ones asked in this drawer (they have a local id).
+      const same = (q: string) => q.trim().toLowerCase() === command.q.trim().toLowerCase();
+      const id = document.getElementById(`turn-${command.turnId}`) ? command.turnId : [...turnsRef.current].reverse().find((t) => same(t.question) && !t.error)?.id;
+      const el = id ? document.getElementById(`turn-${id}`) : null;
+      if (!id || !el) return void ask(command.q);
+      requestAnimationFrame(() => el.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
+      setHighlight(id);
+      window.setTimeout(() => setHighlight((h) => (h === id ? null : h)), 3000);
+    }
+  }, [command, ask]);
 
   const speech = useSpeechInput({
     onText: (t) => {
@@ -211,8 +263,8 @@ export function AskApp({ school, parent, storageKey, initialQuestion = null, ope
   const empty = turns.length === 0;
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-[720px] flex-col">
-      <ParentHeader school={school} back />
+    <div className={`mx-auto flex max-w-[720px] flex-col ${embedded ? "min-h-full" : "min-h-dvh"}`}>
+      {embedded ? null : <ParentHeader school={school} back />}
 
       {offline ? (
         <div role="status" className="mx-4 mt-1 flex items-center gap-2 rounded-[12px] bg-warning-tint px-3 py-2 text-label font-medium text-warning-ink sm:mx-6">
@@ -265,7 +317,7 @@ export function AskApp({ school, parent, storageKey, initialQuestion = null, ope
         ) : (
           <ol className="space-y-5 pt-4">
             {turns.map((t) => (
-              <li key={t.id} className="space-y-2.5">
+              <li key={t.id} id={`turn-${t.id}`} className={`scroll-mt-4 space-y-2.5 rounded-[24px] transition-shadow duration-500 ${highlight === t.id ? "ring-2 ring-accent ring-offset-4 ring-offset-canvas" : ""}`}>
                 <div className="rise-in ml-auto w-fit max-w-[85%] rounded-[20px] rounded-br-md bg-accent px-4 py-2.5 text-body text-on-accent shadow-1">{t.question}</div>
                 {t.ack && t.streaming && !t.card.headline ? <p className="fade-in pl-1 text-dense text-muted">{t.ack}</p> : null}
                 {t.error ? (

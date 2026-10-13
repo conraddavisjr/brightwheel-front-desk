@@ -75,3 +75,57 @@ export function asksForHours(question: string): boolean {
     /^\W*(what are (the|your)\s+)?hours\W*$/.test(q)
   );
 }
+
+const WEEKDAY_WORDS: Record<string, (typeof DAYS)[number]> = { sunday: "sun", monday: "mon", tuesday: "tue", wednesday: "wed", thursday: "thu", friday: "fri", saturday: "sat" };
+
+/** Which day a question is about: "today", "tomorrow", a weekday, or none (the whole week). */
+export function dayAsked(question: string, now: Date, tz: string): { day: (typeof DAYS)[number]; offset: number; when: string } | null {
+  const q = question.toLowerCase();
+  const { day: today } = localParts(now, tz);
+  const at = (offset: number) => DAYS[(DAYS.indexOf(today) + offset) % 7];
+  if (/\b(today|tonight|right now|now|this (morning|afternoon|evening))\b/.test(q)) return { day: today, offset: 0, when: "today" };
+  if (/\btomorrow\b/.test(q)) return { day: at(1), offset: 1, when: "tomorrow" };
+  for (const [word, d] of Object.entries(WEEKDAY_WORDS)) {
+    if (new RegExp(`\\b${word}s?\\b`).test(q)) {
+      const offset = (DAYS.indexOf(d) - DAYS.indexOf(today) + 7) % 7;
+      return { day: d, offset, when: offset === 0 ? "today" : `on ${DAY_NAMES[d]}` };
+    }
+  }
+  return null;
+}
+
+/**
+ * Lead with the answer to what was asked: "We close at 5:30pm today." rather
+ * than the weekly schedule (which still follows in the card).
+ * `closure` is a calendar closure on that day, like "Veterans Day".
+ */
+export function hoursHeadline(question: string, hours: WeeklyHours, tz: string, now = new Date(), closure: string | null = null): string {
+  const q = question.toLowerCase();
+  const asksClose = /\b(clos(e|es|ing)|until|pick ?up by|latest|end of (the )?day)\b/.test(q);
+  // "What time do you open?" asks for the opening time; "Are you open today?" asks for the day's hours.
+  const asksOpen = !asksClose && (/\b(what time|when)\b.*\bopen/.test(q) || /\b(opening time|drop ?off|earliest|start)\b/.test(q));
+  const facts = hoursFacts(hours);
+  const week = facts[0] ? `We're open ${facts[0].label}, ${facts[0].value}.` : "Here are our hours.";
+  const target = dayAsked(question, now, tz);
+  if (!target) return week;
+
+  const next = (from: number) => {
+    for (let i = from + 1; i <= from + 7; i++) {
+      const d = DAYS[(DAYS.indexOf(target.day) + (i - from)) % 7];
+      const h = hours[d];
+      if (h) return `We open again ${i - from === 1 && target.offset === 0 ? "tomorrow" : DAY_NAMES[d]} at ${fmtTime(h[0])}.`;
+    }
+    return "";
+  };
+  const h = hours[target.day];
+  if (closure) return `We're closed ${target.when} for ${closure}. ${next(target.offset)}`.trim();
+  if (!h) return `We're closed ${target.when === "today" ? "today" : `on ${DAY_NAMES[target.day]}s`}. ${next(target.offset)}`.trim();
+
+  if (target.offset === 0) {
+    const { minutes } = localParts(now, tz);
+    if (minutes >= toMin(h[1])) return `We closed at ${fmtTime(h[1])} today. ${next(0)}`.trim();
+  }
+  if (asksClose) return `We close at ${fmtTime(h[1])} ${target.when}.`;
+  if (asksOpen) return `We open at ${fmtTime(h[0])} ${target.when}.`;
+  return `${target.when === "today" ? "Today" : target.when === "tomorrow" ? "Tomorrow" : `On ${DAY_NAMES[target.day]}s`} we're open ${fmtTime(h[0])} - ${fmtTime(h[1])}.`;
+}

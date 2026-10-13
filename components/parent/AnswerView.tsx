@@ -17,7 +17,7 @@ export interface AnswerViewProps {
   onMessageStaff?: () => void;
 }
 
-const SOURCE_LABEL: Record<string, string> = { notion: "Notion", drive: "Google Drive", calendar: "Calendar", ical: "Calendar", upload: "Upload", manual: "Front Desk", slack: "Slack" };
+const SOURCE_LABEL: Record<string, string> = { notion: "Notion", drive: "Google Drive", calendar: "Calendar", ical: "Calendar", upload: "Upload", manual: "Front Desk" };
 
 export function AnswerView({ card, streaming, status, schoolName, feedback, onFeedback, onFollowUp, onOpenSources, onMessageStaff }: AnswerViewProps) {
   const outcome = card.outcome ?? "answered";

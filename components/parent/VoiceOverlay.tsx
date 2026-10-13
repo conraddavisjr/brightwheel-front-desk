@@ -10,7 +10,7 @@ import { X } from "lucide-react";
 export function VoiceOverlay({ phase, transcript, onClose }: { phase: "listening" | "thinking" | "speaking"; transcript: string; onClose: () => void }) {
   const label = phase === "listening" ? "Listening" : phase === "thinking" ? "Checking" : "Speaking";
   return (
-    <div role="dialog" aria-modal="true" aria-label="Voice mode" className="fade-in fixed inset-0 z-50 flex flex-col bg-[color-mix(in_oklab,var(--canvas)_88%,transparent)] backdrop-blur-md">
+    <div role="dialog" aria-modal="true" aria-label="Voice mode" className="fade-in fixed inset-0 z-50 flex flex-col overflow-hidden bg-[color-mix(in_oklab,var(--canvas)_88%,transparent)] backdrop-blur-md">
       <div className="flex justify-end p-4">
         <button type="button" onClick={onClose} aria-label="Close voice mode" className="grid h-11 w-11 place-items-center rounded-full bg-surface text-ink shadow-2">
           <X className="h-5 w-5" aria-hidden />
@@ -24,9 +24,9 @@ export function VoiceOverlay({ phase, transcript, onClose }: { phase: "listening
           {transcript || (phase === "listening" ? "Ask anything about your school…" : "")}
         </p>
       </div>
-      <div aria-hidden className="relative h-56 overflow-hidden">
+      {/* The glow fades into the page: a mask feathers its top, so there is no edge to see. */}
+      <div aria-hidden className="relative h-72" style={{ maskImage: "linear-gradient(to top, black 35%, transparent)", WebkitMaskImage: "linear-gradient(to top, black 35%, transparent)" }}>
         <div className={`absolute inset-x-[-20%] bottom-[-60%] h-[160%] rounded-[50%] blur-3xl ${phase === "listening" ? "glow-breathe" : ""}`} style={{ background: "var(--ai-gradient-linear)", opacity: phase === "thinking" ? 0.55 : 0.85 }} />
-        <div className="absolute inset-x-0 bottom-0 h-1.5" style={{ background: "var(--ai-gradient-linear)" }} />
         <div className="absolute inset-x-0 bottom-10 flex items-end justify-center gap-1.5">
           {Array.from({ length: 5 }, (_, i) => (
             <span

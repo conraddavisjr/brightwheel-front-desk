@@ -8,7 +8,6 @@ import { SourcesView, type SourceCard } from "@/components/operator/SourcesView"
 import { ListSkeleton } from "@/components/operator/ListSkeleton";
 import { notionConfigured } from "@/lib/integrations/notion";
 import { googleConfigured } from "@/lib/integrations/google";
-import { slackConfigured } from "@/lib/integrations/slack";
 
 export const metadata: Metadata = { title: "Sources" };
 
@@ -51,5 +50,5 @@ async function Data({ searchParams }: { searchParams: PageProps<"/operator/sourc
     };
   });
   const flash = Object.fromEntries(Object.entries(params).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])) as Record<string, string | undefined>;
-  return <SourcesView sources={cards} flash={flash} configured={{ notion: notionConfigured(), google: googleConfigured(), slack: slackConfigured() }} />;
+  return <SourcesView sources={cards} flash={flash} configured={{ notion: notionConfigured(), google: googleConfigured() }} />;
 }

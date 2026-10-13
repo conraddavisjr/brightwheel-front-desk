@@ -9,10 +9,10 @@ import { extractiveAnswer, generateAnswer } from "@/lib/answer/generate";
 import { answerableFollowUps } from "@/lib/answer/followUps";
 import { openerFor, utteranceKind, looksSpanish } from "@/lib/answer/fillers";
 import { routeCard, type SchoolContact } from "@/lib/answer/routeReplies";
-import { asksForHours, hoursFacts, openNow, type WeeklyHours } from "@/lib/answer/hours";
+import { asksForHours, dayAsked, hoursFacts, hoursHeadline, openNow, type WeeklyHours } from "@/lib/answer/hours";
 import { detect } from "@/lib/privacy/detect";
-import { notifyGap } from "@/lib/integrations/slack";
 import type { AnswerCard, AskEvent, ModelAnswer } from "@/lib/schemas";
+import { zonedMidnight } from "@/lib/time";
 
 /**
  * One question, end to end. Yields stream events as it goes so the parent
@@ -128,13 +128,15 @@ export async function* runAsk(input: AskInput): AsyncGenerator<AskEvent> {
 
   // Opening hours are structured data the director owns: answered in code, instantly, with no search and no model.
   if (Object.keys(school.hours).length > 0 && asksForHours(question)) {
-    const facts = hoursFacts(school.hours);
+    // Lead with what was asked ("We close at 5:30pm today"); the weekly table follows.
+    const target = dayAsked(question, new Date(), school.timezone);
+    const closure = target ? await closureOn(input.schoolId, school.timezone, target.offset) : null;
     const card: AnswerCard = {
       ...emptyCard(),
       kind: "hours",
-      headline: facts[0] ? `We're open ${facts[0].label}, ${facts[0].value}.` : "Here are our hours.",
-      facts,
-      openNow: openNow(school.hours, school.timezone),
+      headline: hoursHeadline(question, school.hours, school.timezone, new Date(), closure),
+      facts: hoursFacts(school.hours),
+      openNow: openNow(school.hours, school.timezone, new Date(), target?.offset === 0 ? closure : null),
       followUps: ["When are you closed next?", "What is the late pickup fee?", "How do I book a tour?"],
     };
     yield* finish(card, "structured_hours");
@@ -273,7 +275,7 @@ async function unsure(question: string, topic: string, input: AskInput, school: 
 
 async function recordGap(schoolId: string, question: string, normalized: string, topic: string, askerId: string | null, note: string | null) {
   try {
-    const { data: id } = await db().rpc("record_gap", {
+    const { error } = await db().rpc("record_gap", {
       p_school: schoolId,
       p_question: question,
       p_normalized: normalized || question.toLowerCase(),
@@ -282,7 +284,7 @@ async function recordGap(schoolId: string, question: string, normalized: string,
       p_kind: note ? "conflict" : "question",
       p_note: note,
     });
-    if (id) notifyGap(String(id)).catch((err) => console.error("[slack] gap notify failed", err));
+    if (error) throw error;
   } catch (err) {
     console.error("[gaps] record failed", err);
   }
@@ -325,4 +327,21 @@ async function ensureConversation(input: AskInput): Promise<string> {
 async function saveMessage(conversationId: string, schoolId: string, m: Record<string, unknown>): Promise<string> {
   const row = must(await db().from("messages").insert({ conversation_id: conversationId, school_id: schoolId, ...m }).select("id").single(), "message");
   return row.id;
+}
+
+/** A closure on the school calendar for a day (0 = today), like "Veterans Day". */
+async function closureOn(schoolId: string, tz: string, offset: number): Promise<string | null> {
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(Date.now() + offset * 86400000));
+  const start = zonedMidnight(day, tz);
+  const end = new Date(start.getTime() + 86400000);
+  const { data } = await db()
+    .from("events")
+    .select("title")
+    .eq("school_id", schoolId)
+    .eq("visibility", "family")
+    .lt("starts_at", end.toISOString())
+    .gte("ends_at", start.toISOString())
+    .limit(10);
+  const hit = (data ?? []).find((e) => /\b(closed|closure|no school)\b/i.test(e.title));
+  return hit ? hit.title.replace(/^\s*(closed|closure)\s*[-:·]\s*/i, "").trim() || "a school closure" : null;
 }

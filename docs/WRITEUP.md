@@ -42,7 +42,7 @@ Privacy Guard is data loss prevention for a childcare knowledge base.
 
 **Operator control.**
 - Directors see answered vs. needed-staff, hours saved, ratings, top questions and top sources.
-- Gaps are answered in their own words and published instantly; Slack answers work the same way.
+- Gaps are answered in their own words and published instantly, and the families who asked see the answer on their home screen.
 - "Ask a test question" shows exactly what a parent would get after an edit.
 
 **Cost.**
@@ -60,4 +60,4 @@ A daily cap bounds usage, and tests, CI and evals run on deterministic stubs.
 - Detectors are US- and English-centric.
 
 **Next.**
-Approved write-back (draft replies the director approves), per-family answers from brightwheel's own data, proactive Spotlight nudges, multilingual answers, and turning thumbs-down answers into eval cases automatically.
+Slack alerts for unanswered questions with an in-thread Answer button (staff answer where they already work), approved write-back (draft replies the director approves), per-family answers from brightwheel's own data, proactive Spotlight nudges, multilingual answers, and turning thumbs-down answers into eval cases automatically.

@@ -3,7 +3,6 @@ import { db } from "@/lib/db/client";
 import { requireStaff } from "@/lib/operator/auth";
 import { ingestDocument, reindexDocument } from "@/lib/ingest/ingest";
 import { audit, manualSource } from "@/lib/operator/manualSource";
-import { markAnsweredInSlack } from "@/lib/integrations/slack";
 import { plain } from "@/lib/text";
 
 const Body = z.discriminatedUnion("action", [
@@ -64,8 +63,6 @@ export async function POST(req: Request, ctx: RouteContext<"/api/operator/gaps/[
     .update({ status: "answered", answer: body.answer, answer_document_id: result.documentId, answered_by: session.personId, answered_at: now, notified_at: body.notify ? now : null })
     .eq("id", id);
   await audit(session.schoolId, session.personId, "gap.answer", { gapId: id, documentId: result.documentId, notified: body.notify ? gap.asker_ids.length : 0 });
-  const { data: me } = await client.from("people").select("name").eq("id", session.personId).single();
-  markAnsweredInSlack(id, me?.name ?? "the director").catch((e) => console.error("[slack]", e));
   return Response.json({ ok: true, documentId: result.documentId, held: result.newlyHeld, notified: body.notify ? gap.asker_ids.length : 0 });
 }
 

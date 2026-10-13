@@ -16,6 +16,13 @@ export interface Pending {
   text: string;
   at: string;
 }
+export interface ThreadTurn {
+  id: string;
+  question: string;
+  card: Record<string, unknown>;
+  messageId: string | null;
+  feedback: 1 | -1 | null;
+}
 export interface RecentQuestion {
   id: string;
   question: string;
@@ -28,7 +35,7 @@ export interface RecentQuestion {
  * Everything on a parent's home screen, scoped to that one parent: replies
  * from staff, what is still waiting on staff, and their recent questions.
  */
-export async function parentHome(schoolId: string, parentId: string): Promise<{ replies: StaffReply[]; pending: Pending[]; recent: RecentQuestion[] }> {
+export async function parentHome(schoolId: string, parentId: string): Promise<{ replies: StaffReply[]; pending: Pending[]; recent: RecentQuestion[]; thread: ThreadTurn[] }> {
   const client = db();
   const [convs, gaps] = await Promise.all([
     client.from("conversations").select("id").eq("school_id", schoolId).eq("parent_id", parentId).order("last_at", { ascending: false }).limit(60),
@@ -37,9 +44,9 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
   const convIds = (must(convs, "conversations") as Array<{ id: string }>).map((c) => c.id);
   const msgs = convIds.length
     ? (must(
-        await client.from("messages").select("id,conversation_id,role,text,outcome,reason,author_id,created_at,card").in("conversation_id", convIds).order("created_at", { ascending: true }),
+        await client.from("messages").select("id,conversation_id,role,text,outcome,reason,author_id,created_at,card,feedback").in("conversation_id", convIds).order("created_at", { ascending: true }),
         "messages",
-      ) as Array<{ id: string; conversation_id: string; role: string; text: string; outcome: string | null; reason: string | null; author_id: string | null; created_at: string; card: { headline?: string } | null }>)
+      ) as Array<{ id: string; conversation_id: string; role: string; text: string; outcome: string | null; reason: string | null; author_id: string | null; created_at: string; card: ({ headline?: string } & Record<string, unknown>) | null; feedback: 1 | -1 | null }>)
     : [];
   const gapRows = must(gaps, "gaps") as Array<{ id: string; question: string; status: string; answer: string | null; answered_by: string | null; answered_at: string | null; first_asked_at: string; last_asked_at: string }>;
 
@@ -61,6 +68,7 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
   const byConv = new Map<string, typeof msgs>();
   for (const m of msgs) byConv.set(m.conversation_id, [...(byConv.get(m.conversation_id) ?? []), m]);
   const recent: RecentQuestion[] = [];
+  const turns: Array<ThreadTurn & { at: string }> = [];
   for (const thread of byConv.values()) {
     thread.forEach((m, i) => {
       if (m.role === "parent" && m.reason === "to_staff") {
@@ -69,7 +77,12 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
         else pending.push({ id: `msg:${m.id}`, kind: "message", text: m.text, at: m.created_at });
       } else if (m.role === "parent") {
         const a = thread.slice(i + 1).find((x) => x.role === "assistant");
-        if (a) recent.push({ id: m.id, question: m.text, answer: a.card?.headline ?? a.text, outcome: a.outcome ?? "answered", at: m.created_at });
+        if (a) {
+          recent.push({ id: m.id, question: m.text, answer: a.card?.headline ?? a.text, outcome: a.outcome ?? "answered", at: m.created_at });
+          // Older answers saved only as text show as a plain card.
+          const card = a.card ?? { outcome: a.outcome ?? "answered", headline: a.text, body: "", facts: [], steps: [], events: [], citations: [], followUps: [] };
+          turns.push({ id: m.id, question: m.text, card, messageId: a.id, feedback: a.feedback, at: m.created_at });
+        }
       }
     });
   }
@@ -83,6 +96,13 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
     else if (pending.some((x) => key(x.text) === key(r.question))) r.answer = "Waiting on the front desk.";
   }
 
+  // In the chat thread too: once staff answer a question, their answer stands in for "I don't have that".
+  for (const t of turns) {
+    if ((t.card as { outcome?: string }).outcome !== "unsure") continue;
+    const reply = replies.find((x) => x.kind === "answer" && key(x.about) === key(t.question));
+    if (reply) t.card = { outcome: "answered", kind: "answer", headline: reply.text, body: `${reply.by?.name.split(" ")[0] ?? "Staff"} from the front desk answered this.`, facts: [], steps: [], events: [], citations: [], followUps: [], handoff: null, openNow: null };
+  }
+
   const newest = <T extends { at: string }>(xs: T[]) => xs.sort((a, b) => b.at.localeCompare(a.at));
   // One row per question: the latest time it was asked.
   const seen = new Set<string>();
@@ -92,5 +112,7 @@ export async function parentHome(schoolId: string, parentId: string): Promise<{ 
     seen.add(k);
     return true;
   });
-  return { replies: newest(replies).slice(0, 4), pending: newest(pending).slice(0, 4), recent: uniqueRecent.slice(0, 5) };
+  // The chat drawer's thread: the last 20 questions, oldest first, so the newest sits by the input.
+  const chat = newest(turns).slice(0, 20).reverse().map((t) => ({ id: t.id, question: t.question, card: t.card, messageId: t.messageId, feedback: t.feedback }));
+  return { replies: newest(replies).slice(0, 4), pending: newest(pending).slice(0, 4), recent: uniqueRecent.slice(0, 5), thread: chat };
 }

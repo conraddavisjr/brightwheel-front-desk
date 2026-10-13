@@ -16,12 +16,11 @@ const CATALOG = [
   { kind: "notion", name: "Notion", blurb: "Handbooks and policy pages" },
   { kind: "drive", name: "Google Drive", blurb: "Docs, Sheets and PDFs you pick" },
   { kind: "calendar", name: "Google Calendar", blurb: "Events, closures and holidays", alt: ["ical"] },
-  { kind: "slack", name: "Slack", blurb: "Unanswered questions in a channel" },
 ];
 
 export function IntegrationTiles({ sources, compact = false }: { sources: SourceRow[]; compact?: boolean }) {
   return (
-    <ul className={`grid gap-3 ${compact ? "grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-2"}`}>
+    <ul className={`grid grid-cols-1 gap-3 [&>*]:min-w-0 ${compact ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
       {CATALOG.map((c) => {
         const connected = sources.filter((s) => s.kind === c.kind || c.alt?.includes(s.kind));
         const on = connected.length > 0;

@@ -69,7 +69,7 @@ The landing page signs you in with one tap as a parent or a director at either s
   Each page has a Family-visible or Staff-only switch, inline Privacy Guard highlights, editing, archiving and new pages.
   "Ask a test question" runs the real parent pipeline without saving anything.
 - **Privacy Guard:** the review queue, the documents kept staff-only, 14 preset protected-info rules plus your own, and an audit log of every decision.
-- **Sources:** Notion and Google (Drive Picker and Calendar) over real OAuth, a public iCal link, Slack alerts with an Answer button, and drag-and-drop upload for PDFs, images, text and CSV.
+- **Sources:** Notion and Google (Drive Picker and Calendar) over real OAuth, a public iCal link, and drag-and-drop upload for PDFs, images, text and CSV.
 
 ## How it works
 
@@ -137,7 +137,6 @@ Policy text ("we need a copy of any court order") is never flagged; a named fami
 - Every table has row level security with no policies, so the database is unreadable except to the server.
 - Every query is scoped by the school in a signed HttpOnly session.
 - OAuth tokens are encrypted at rest with AES-256-GCM, and OAuth state is HMAC-signed.
-- Slack requests are signature-verified.
 - Rate limits use Postgres fixed windows.
 - Security headers are set, and the eval route is fail-closed.
 
@@ -176,7 +175,7 @@ npm run dev
 ```
 
 No keys are needed: without `GEMINI_API_KEY` everything runs on deterministic stubs.
-To make it live, see [docs/SETUP.md](docs/SETUP.md) (Gemini, Supabase, Notion, Google, Slack).
+To make it live, see [docs/SETUP.md](docs/SETUP.md) (Gemini, Supabase, Notion, Google).
 
 ```sh
 npm test && npm run lint && npm run typecheck
@@ -190,7 +189,7 @@ FRONT_DESK_URL=http://localhost:3000 EVAL_SECRET=local pnpm eval:target --config
 
 - Demo sign-in is one tap.
   In brightwheel this would be brightwheel's own auth and roles.
-- Email and in-app notifications to families are simulated; the Slack loop is real when configured.
+- Email and in-app notifications to families are simulated.
 - Google Calendar uses a sensitive scope, so it works for test users only until Google verifies the app; the iCal link path works for anyone.
 - Detectors are tuned for US formats and English names.
   The AI review layer covers more, but neither is a compliance guarantee.
@@ -215,7 +214,7 @@ lib/answer/          pipeline, generation (live + extractive), fillers, hours
 lib/retrieval/       chunking and hybrid search
 lib/privacy/         detectors, AI review, presets, review actions
 lib/guard/           router and rate limits
-lib/integrations/    Notion, Google, iCal, Slack, sync, token crypto
+lib/integrations/    Notion, Google, iCal, sync, token crypto
 supabase/migrations/ schema, RLS, search and gap functions
 seed/                fictional school content (tidy and chaotic)
 evals/               eval pack for the in-house harness

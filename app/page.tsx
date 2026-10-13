@@ -42,7 +42,7 @@ export default function Landing() {
             <p className="mt-2 text-dense text-muted">Ask anything by text, voice or a guided flow. Answers cite the school&apos;s own documents, and anything uncertain goes to staff.</p>
             <ParentPreview />
             <div className="mt-5 grid gap-2.5">
-              <DemoDoor school="harbor-kids" role="parent" title="Chat with Harbor Kids" person={{ name: "Maya Chen-Ortiz", firstName: "Maya", hue: 340 }} detail="Lucas's parent" />
+              <DemoDoor school="harbor-kids" role="parent" title="Chat with Harbor Kids" person={{ name: "Maya Chen-Ortiz", firstName: "Maya", hue: 340 }} detail="Lucas's parent" variant="secondary" />
               <DemoDoor school="sunflower-valley" role="parent" title="Chat with Sunflower Valley" person={{ name: "Priya Raman", firstName: "Priya", hue: 12 }} detail="Leo's parent" variant="secondary" />
             </div>
           </article>
@@ -55,7 +55,7 @@ export default function Landing() {
             <p className="mt-2 text-dense text-muted">Connect Notion, Google Drive and Calendar. Privacy Guard holds anything sensitive before families can search it. See every question and fix gaps fast.</p>
             <OperatorPreview />
             <div className="mt-5 grid gap-2.5">
-              <DemoDoor school="harbor-kids" role="director" title="Manage Harbor Kids" person={{ name: "Gretchen Lindqvist", firstName: "Gretchen", hue: 187 }} detail="Notion, Drive and Calendar" />
+              <DemoDoor school="harbor-kids" role="director" title="Manage Harbor Kids" person={{ name: "Gretchen Lindqvist", firstName: "Gretchen", hue: 187 }} detail="Notion, Drive and Calendar" variant="secondary" />
               <DemoDoor school="sunflower-valley" role="director" title="Manage Sunflower Valley" person={{ name: "Marisol Okafor", firstName: "Marisol", hue: 268 }} detail="Notion only" variant="secondary" />
             </div>
           </article>

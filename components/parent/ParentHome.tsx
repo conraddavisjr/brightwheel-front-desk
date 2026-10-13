@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowUp, CheckCircle2, Clock3, HelpCircle, Mic, Sparkles, Stethoscope, ChevronRight, MessageCircle } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
 import { possessive } from "@/lib/text";
 import type { Pending, RecentQuestion, StaffReply } from "@/lib/db/parent";
+import { ChatDrawer } from "@/components/parent/ChatDrawer";
+import type { AskParent, AskSchool, ChatCommand, ChatRequest, Turn } from "@/components/parent/AskApp";
 
 export interface HomeData {
   replies: Array<StaffReply & { when: string }>;
@@ -56,10 +58,21 @@ function greeting(): string {
 }
 const noop = () => () => {};
 
-const chat = (q: string) => `/ask/chat?q=${encodeURIComponent(q)}`;
-
 /** The parent's home: a way into chat, what staff said back, what's still waiting, and recent questions. */
-export function ParentHome({ personId, school, parent, data }: { personId: string; school: { shortName: string }; parent: { name: string; firstName: string; hue: number; child: { name: string; room: string } | null }; data: HomeData }) {
+export function ParentHome({ personId, school, parent, data, history }: { personId: string; school: AskSchool; parent: AskParent; data: HomeData; history: Turn[] }) {
+  const router = useRouter();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [command, setCommand] = useState<ChatCommand | null>(null);
+  // Everything on Home opens the same chat drawer; Home stays underneath.
+  const openChat = (c: ChatRequest) => {
+    setCommand({ ...c, n: (command?.n ?? 0) + 1 });
+    setChatOpen(true);
+  };
+  const closeChat = useCallback(() => {
+    setChatOpen(false);
+    // New questions and answers show up in "recent" and "waiting".
+    router.refresh();
+  }, [router]);
   const hello = useSyncExternalStore(noop, greeting, () => "Hello");
   const seenRaw = useSyncExternalStore(subscribe, () => readSeen(personId), () => "[]");
   const seen = new Set(JSON.parse(seenRaw) as string[]);
@@ -83,7 +96,7 @@ export function ParentHome({ personId, school, parent, data }: { personId: strin
       </section>
 
       {/* The way in: one tap to chat with the front desk. */}
-      <Link href="/ask/chat" className="ai-edge rise-in group mt-6 block overflow-hidden rounded-[24px] bg-surface p-5 shadow-2 transition hover:-translate-y-0.5 hover:shadow-3 sm:p-6" style={{ animationDelay: "40ms" }}>
+      <button type="button" onClick={() => openChat({ kind: "focus" })} className="ai-edge rise-in group mt-6 block w-full overflow-hidden rounded-[24px] bg-surface p-5 text-left shadow-2 transition hover:-translate-y-0.5 hover:shadow-3 sm:p-6" style={{ animationDelay: "40ms" }}>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-ai-tint px-2.5 py-1 text-caption font-semibold text-ai-ink">
           <Sparkles className="h-3.5 w-3.5" aria-hidden /> Front Desk
         </span>
@@ -96,16 +109,16 @@ export function ParentHome({ personId, school, parent, data }: { personId: strin
             <ArrowUp className="h-4 w-4" aria-hidden />
           </span>
         </span>
-      </Link>
+      </button>
       <div className="rise-in mt-3 flex flex-wrap gap-2" style={{ animationDelay: "80ms" }}>
         {QUICK.map((c) => (
-          <Link key={c.label} href={chat(c.q)} className="inline-flex min-h-10 items-center rounded-full bg-surface px-3.5 text-label font-semibold text-ink shadow-1 ring-1 ring-line-soft hover:bg-accent-tint-2">
+          <button key={c.label} type="button" onClick={() => openChat({ kind: "ask", q: c.q })} className="inline-flex min-h-10 items-center rounded-full bg-surface px-3.5 text-label font-semibold text-ink shadow-1 ring-1 ring-line-soft hover:bg-accent-tint-2">
             {c.label}
-          </Link>
+          </button>
         ))}
-        <Link href="/ask/chat?check=sick" className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-pink-tint px-3.5 text-label font-semibold text-pink-ink hover:brightness-95">
+        <button type="button" onClick={() => openChat({ kind: "sick" })} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-pink-tint px-3.5 text-label font-semibold text-pink-ink hover:brightness-95">
           <Stethoscope className="h-4 w-4" aria-hidden /> Can {child} come in today?
-        </Link>
+        </button>
       </div>
 
       {data.replies.length ? (
@@ -143,9 +156,16 @@ export function ParentHome({ personId, school, parent, data }: { personId: strin
                       </button>
                     ) : null}
                     {r.kind === "answer" ? (
-                      <Link href={chat(r.about)} onClick={() => markSeen(personId, r.id)} className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-label font-semibold text-accent hover:bg-accent-tint">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          markSeen(personId, r.id);
+                          openChat({ kind: "ask", q: r.about });
+                        }}
+                        className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-label font-semibold text-accent hover:bg-accent-tint"
+                      >
                         Ask about it <ArrowRight className="h-4 w-4" aria-hidden />
-                      </Link>
+                      </button>
                     ) : null}
                   </div>
                 </li>
@@ -183,7 +203,7 @@ export function ParentHome({ personId, school, parent, data }: { personId: strin
           <ul className="mt-3 overflow-hidden rounded-[20px] bg-surface shadow-1 ring-1 ring-line-soft">
             {data.recent.map((q) => (
               <li key={q.id} className="border-b border-line-soft last:border-0">
-                <Link href={chat(q.question)} className="flex items-start gap-3 p-4 transition hover:bg-sunken">
+                <button type="button" onClick={() => openChat({ kind: "show", turnId: q.id, q: q.question })} className="flex w-full items-start gap-3 p-4 text-left transition hover:bg-sunken">
                   {q.outcome === "answered" ? (
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" aria-label="Answered" />
                   ) : q.outcome === "staff" ? (
@@ -197,7 +217,7 @@ export function ParentHome({ personId, school, parent, data }: { personId: strin
                     <span className="mt-1 block text-caption text-muted">{q.when}</span>
                   </span>
                   <ChevronRight className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
-                </Link>
+                </button>
               </li>
             ))}
           </ul>
@@ -207,6 +227,7 @@ export function ParentHome({ personId, school, parent, data }: { personId: strin
       </section>
 
       <p className="mt-10 text-center text-[11px] text-muted">AI answers from {possessive(school.shortName)} documents. Staff can always help.</p>
+      <ChatDrawer open={chatOpen} onClose={closeChat} school={school} parent={parent} storageKey={`fd:thread:${personId}`} history={history} command={command} />
     </main>
   );
 }

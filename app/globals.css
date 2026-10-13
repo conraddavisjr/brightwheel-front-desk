@@ -407,18 +407,18 @@
   }
 }
 
-/* The How-it-works banner's step timer: a bar that fills, then advances the step. */
-.banner-progress {
-  animation-name: banner-progress;
+/* The How-it-works banner's step timer: a ring that fills around the pause button, then advances the step. */
+.ring-progress {
+  animation-name: ring-progress;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
-@keyframes banner-progress {
+@keyframes ring-progress {
   from {
-    transform: scaleX(0);
+    stroke-dashoffset: 100;
   }
   to {
-    transform: scaleX(1);
+    stroke-dashoffset: 0;
   }
 }
 

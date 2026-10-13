@@ -8,7 +8,7 @@ export function ParentHeader({ school, back = false }: { school: { slug: string;
   return (
     <header className="sticky top-0 z-20 flex items-center gap-3 bg-canvas/85 px-4 py-3 backdrop-blur-xl sm:px-6">
       {back ? (
-        <Link href="/ask" aria-label="Back to home" className="-ml-2 grid h-11 w-9 shrink-0 place-items-center rounded-full text-muted hover:bg-sunken hover:text-ink">
+        <Link href="/ask" aria-label="Back to home" className="-ml-2 grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-sunken hover:text-ink">
           <ChevronLeft className="h-5 w-5" aria-hidden />
         </Link>
       ) : null}

@@ -94,23 +94,33 @@ export function HowItWorksBanner() {
             <Link href="/operator/inbox" className="inline-flex min-h-11 items-center rounded-full px-4 text-dense font-semibold text-accent hover:bg-accent-tint">
               See what families asked
             </Link>
-            <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Play demo" : "Pause demo"} className="ml-auto grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-sunken">
+            <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Play demo" : "Pause demo"} className="relative ml-auto grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-sunken">
+              {/* A quiet ring fills around the button as each step plays; when it closes, the next step starts. */}
+              <svg aria-hidden viewBox="0 0 40 40" className="absolute inset-0 -rotate-90">
+                <circle cx="20" cy="20" r="18.5" fill="none" stroke="var(--border-soft)" strokeWidth="1.5" />
+                {motionOff ? null : (
+                  <circle
+                    key={step}
+                    cx="20"
+                    cy="20"
+                    r="18.5"
+                    fill="none"
+                    stroke="var(--border-strong)"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    pathLength={100}
+                    strokeDasharray="100"
+                    onAnimationEnd={next}
+                    className="ring-progress"
+                    style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }}
+                  />
+                )}
+              </svg>
               {paused ? <Play className="h-4 w-4" aria-hidden /> : <Pause className="h-4 w-4" aria-hidden />}
             </button>
           </div>
         </div>
         <Demo step={step} />
-      </div>
-      {/* Progress along the bottom edge: shows the demo moves on by itself, and when. */}
-      <div aria-hidden className="absolute inset-x-0 bottom-0 h-[3px] bg-line-soft">
-        {motionOff ? null : (
-          <div
-            key={step}
-            onAnimationEnd={next}
-            className="banner-progress h-full origin-left bg-accent"
-            style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }}
-          />
-        )}
       </div>
       <button
         type="button"

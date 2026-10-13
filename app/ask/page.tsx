@@ -30,9 +30,10 @@ async function HomeLoader() {
       <ParentHeader school={{ slug: school.slug, name: school.name, shortName: school.short_name, openNow: school.openNow }} />
       <ParentHome
         personId={session.personId}
-        school={{ shortName: school.short_name }}
+        school={{ slug: school.slug, name: school.name, shortName: school.short_name, tagline: school.tagline, phone: school.phone, openNow: school.openNow }}
         parent={{ name: me.name, firstName: me.name.split(" ")[0], hue: me.avatar_hue, child: me.children[0] ?? null }}
         data={{ replies: withWhen(data.replies), pending: withWhen(data.pending), recent: withWhen(data.recent) }}
+        history={data.thread.map((t) => ({ id: t.id, question: t.question, ack: null, status: null, card: t.card, streaming: false, messageId: t.messageId, feedback: t.feedback, error: null }))}
       />
     </div>
   );

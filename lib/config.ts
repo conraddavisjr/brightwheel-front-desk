@@ -59,11 +59,6 @@ export const config = {
       pickerApiKey: optional("GOOGLE_PICKER_API_KEY"),
       appId: optional("GOOGLE_APP_ID"),
     },
-    slack: {
-      botToken: optional("SLACK_BOT_TOKEN"),
-      signingSecret: optional("SLACK_SIGNING_SECRET"),
-      channelId: optional("SLACK_CHANNEL_ID"),
-    },
   },
 
   eval: {

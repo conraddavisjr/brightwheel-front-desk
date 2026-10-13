@@ -28,23 +28,39 @@ test("home shows staff replies, what's waiting, and recent questions", async ({ 
   await expect(waiting.getByText("Do you offer a summer camp?")).toBeVisible();
   await expect(waiting.getByText(/Otters room in January/)).toBeVisible();
 
-  await expect(page.getByRole("region", { name: "Your recent questions" }).getByRole("link").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "Your recent questions" }).getByRole("button").first()).toBeVisible();
 });
 
-test("the banner opens chat, a recent question re-asks it, and the breadcrumb goes home", async ({ page }) => {
-  await page.getByRole("link", { name: /Ask Harbor Kids anything/ }).click();
-  await expect(page).toHaveURL(/\/ask\/chat$/);
-  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Home" }).click();
-  await expect(page).toHaveURL(/\/ask$/);
+test("chat opens in a drawer over home; a recent question opens its original answer", async ({ page }) => {
+  const chat = page.getByRole("dialog", { name: "Chat with Harbor Kids" });
+  await page.getByRole("button", { name: /Ask Harbor Kids anything/ }).click();
+  await expect(chat.getByLabel("Your question")).toBeFocused();
+  await expect(page).toHaveURL(/\/ask$/); // never leaves home
+  await chat.getByRole("navigation", { name: "Breadcrumb" }).getByRole("button", { name: "Home" }).click();
+  await expect(chat.getByLabel("Your question")).not.toBeInViewport();
 
-  await page.getByRole("link", { name: "Hours", exact: true }).click();
-  await expect(page).toHaveURL(/\/ask\/chat$/); // the question is dropped from the URL once asked
-  await expect(page.locator("main article").last()).toContainText(/We're open/, { timeout: 20_000 });
+  // A pill asks its question in the drawer.
+  await page.getByRole("button", { name: "Hours", exact: true }).click();
+  await expect(chat.locator("article").last()).toContainText(/We're open|We close|We open/, { timeout: 20_000 });
+  await chat.getByRole("button", { name: "Close chat" }).click();
+
+  // A recent question scrolls to and highlights its earlier answer.
+  const recent = page.getByRole("region", { name: "Your recent questions" }).getByRole("button").first();
+  const question = (await recent.innerText()).split("\n")[0];
+  await recent.click();
+  const turn = chat.locator('li[id^="turn-"]').filter({ hasText: question }).last();
+  await expect(turn).toHaveClass(/ring-2/);
+  await expect(turn).toBeInViewport();
+
+  // Back closes the drawer before it leaves the page.
+  await page.goBack();
+  await expect(chat.getByLabel("Your question")).not.toBeInViewport();
+  await expect(page).toHaveURL(/\/ask$/);
 });
 
 test("the sick check opens from home", async ({ page }) => {
-  await page.getByRole("link", { name: /Can Lucas come in today\?/ }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.getByRole("button", { name: /Can Lucas come in today\?/ }).click();
+  await expect(page.getByRole("dialog").filter({ hasText: /Lucas/ }).first()).toBeVisible();
 });
 
 test("a staff answer from the Inbox reaches the parent's home", async ({ page, browser }) => {

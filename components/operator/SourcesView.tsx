@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Loader2, Plus, Upload, Link2, CheckCircle2, AlertTriangle, Trash2, FilePlus2, Info, ArrowUpRight } from "lucide-react";
+import { RefreshCw, Loader2, Plus, Upload, Link2, CheckCircle2, AlertTriangle, Trash2, FilePlus2, ArrowUpRight } from "lucide-react";
 import { BrandIcon } from "@/components/operator/BrandIcon";
 import { Pill } from "@/components/ui/Pill";
 import { Sheet } from "@/components/ui/Sheet";
@@ -43,7 +43,7 @@ const SECTIONS = [
   { kind: "calendar", title: "Calendar", body: "Events, closures and holidays become event cards families can add to their own calendar. Private events stay private.", connect: "/api/integrations/google/start?product=calendar", needs: "google" as const },
 ];
 
-export function SourcesView({ sources, flash, configured }: { sources: SourceCard[]; flash: Record<string, string | undefined>; configured: { notion: boolean; google: boolean; slack: boolean } }) {
+export function SourcesView({ sources, flash, configured }: { sources: SourceCard[]; flash: Record<string, string | undefined>; configured: { notion: boolean; google: boolean } }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
@@ -202,18 +202,6 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
         );
       })}
 
-      <section id="slack" className="scroll-mt-6 rounded-[20px] bg-surface p-4 shadow-1 ring-1 ring-line-soft sm:p-6">
-        <div className="flex flex-wrap items-start gap-4">
-          <BrandIcon kind="slack" size={48} />
-          <div className="min-w-0 flex-1">
-            <h2 className="flex items-center gap-2 text-title-2 font-bold text-ink">
-              Slack {configured.slack ? <Pill tone="success">Connected</Pill> : <Pill tone="neutral" dot={false}>Not connected</Pill>}
-            </h2>
-            <p className="mt-0.5 max-w-xl text-dense text-muted">When a family asks something Front Desk can&apos;t answer, it posts to your staff channel with an Answer button. Answer in Slack and it&apos;s published here, the same as the Inbox.</p>
-            {!configured.slack ? <p className="mt-2 flex items-start gap-1.5 text-caption text-muted"><Info className="mt-0.5 h-3.5 w-3.5" aria-hidden /> Set up with the app manifest in docs/slack-manifest.json.</p> : null}
-          </div>
-        </div>
-      </section>
 
       <UploadZone onDone={() => router.refresh()} />
 

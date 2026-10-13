@@ -6,7 +6,6 @@ const LOGOS: Record<string, { src: string; name: string }> = {
   drive: { src: "/brands/google-drive.svg", name: "Google Drive" },
   calendar: { src: "/brands/google-calendar.svg", name: "Google Calendar" },
   ical: { src: "/brands/google-calendar.svg", name: "Google Calendar" },
-  slack: { src: "/brands/slack.svg", name: "Slack" },
 };
 
 export function brandName(kind: string): string | null {

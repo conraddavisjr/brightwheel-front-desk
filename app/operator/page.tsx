@@ -96,7 +96,7 @@ async function Dashboard() {
         <Stat icon={ThumbsUp} tint="bg-pink-tint text-pink-ink" label="Rated helpful" value={st.helpfulRate === null ? "-" : pct(st.helpfulRate)} sub={`${st.ratings} ratings`} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] [&>*]:min-w-0">
         <Panel title="Questions per day" subtitle="Spikes usually follow an event or an illness going around.">
           <UsageChart data={st.series} />
         </Panel>
@@ -118,7 +118,7 @@ async function Dashboard() {
         </Panel>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Panel title="What families ask most" action={<Link href="/operator/conversations" className="text-label font-semibold text-accent hover:underline">All conversations</Link>}>
           <ol className="divide-y divide-line-soft">
             {st.topQuestions.map((q, i) => (

@@ -45,12 +45,6 @@ To run a script against production, pull the project's variables into a git-igno
    Copy into `GOOGLE_PICKER_API_KEY`.
    The project number (IAM & Admin > Settings) goes into `GOOGLE_APP_ID`.
 
-## 5. Slack app (optional, for gap alerts with an Answer button)
-
-1. https://api.slack.com/apps > Create New App > From a manifest, pick your workspace, paste `docs/slack-manifest.json`.
-2. Install to the workspace, invite the bot to a channel (`/invite @Front Desk`), and copy:
-   the Bot User OAuth token into `SLACK_BOT_TOKEN`, the Signing Secret into `SLACK_SIGNING_SECRET`, and the channel ID into `SLACK_CHANNEL_ID`.
-
-## 6. Vercel
+## 5. Vercel
 
 `vercel link`, then add every variable above plus `SESSION_SECRET`, `TOKEN_ENCRYPTION_KEY` (32+ random characters each), `APP_URL` and `CRON_SECRET`, then `vercel deploy`.

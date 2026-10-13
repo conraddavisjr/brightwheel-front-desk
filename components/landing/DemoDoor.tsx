@@ -50,7 +50,7 @@ export function DemoDoor({
         <span className={`mt-1 flex items-center gap-1.5 text-caption ${primary ? "text-on-accent" : "text-muted"}`}>
           <Avatar name={person.name} hue={person.hue} size={20} className={primary ? "ring-1 ring-white/60" : "ring-1 ring-line-soft"} />
           <span className="truncate">
-            as <span className={`font-semibold ${primary ? "text-on-accent" : "text-ink"}`}>{person.firstName}</span> · {detail}
+            <span className={`font-semibold ${primary ? "text-on-accent" : "text-ink"}`}>{person.firstName}</span> · {detail}
           </span>
         </span>
       </span>
