@@ -2,15 +2,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout: one US Letter sheet. Header, a lede, then text (left) beside evidence (right), then a footer row. */
+/* A light page by choice (it is also the printed PDF).
+   Layout: one US Letter sheet. Header, a lede, then text (left) beside evidence (right), then a footer row. */
 :root {
   --bg: #eef1f6; --sheet: #ffffff; --ink: #1e2549; --muted: #5b6178; --line: #e3e7ee; --soft: #f5f7fb;
   --accent: #5463d6; --accent-tint: #eef1ff; --good: #1d7a4a; --good-tint: #e8f6ee;
   --display: "Figtree", "Avenir Next", system-ui, sans-serif; --body: "Figtree", "Avenir Next", system-ui, sans-serif;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0b0d19; --sheet: #15172b; --ink: #e6e8f5; --muted: #a3a8c3; --line: #2d3356; --soft: #1b1f38; --accent: #8b97ff; --accent-tint: #23295a; --good: #6fd39c; --good-tint: #163a28; color-scheme: dark; } }
-:root[data-theme="dark"] { --bg: #0b0d19; --sheet: #15172b; --ink: #e6e8f5; --muted: #a3a8c3; --line: #2d3356; --soft: #1b1f38; --accent: #8b97ff; --accent-tint: #23295a; --good: #6fd39c; --good-tint: #163a28; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 12px/1.47 var(--body); padding-block: 24px; padding-inline: 16px; }
 .sheet { max-width: 816px; margin: 0 auto; background: var(--sheet); border-radius: 14px; padding: 34px 38px 28px; box-shadow: 0 8px 30px rgba(15, 17, 32, 0.08); }
