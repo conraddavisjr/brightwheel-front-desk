@@ -113,11 +113,13 @@ There are three gates, and any of them turns an answer into "I don't have that y
 - the citation check
 
 That question becomes an Inbox gap, which is the loop that makes the system better over time.
-When two sources disagree, the outdated one is pushed last, marked `OUTDATED` for the model, never cited, and raised to the director as a conflict to resolve.
+When two sources disagree, the outdated one is pushed last, marked `OUTDATED` for the model, never cited, and raised to the director as a conflict to resolve (parents are never told documents disagree).
+Conflict detection is deliberately narrow today: differing temperatures and titles that say "old", "outdated" or an earlier year.
+Disagreements in prices, durations or wording can still slip through; catching those is on the list below.
 
 **Safety, before any model call.**
-A rules router (plain code, free and instant) runs in this order:
-1. Emergencies go to 911 and the school phone.
+A rules router (plain code, free and instant) runs before rate limits, small talk, fillers and the database, in this order:
+1. Emergencies go to 911 and the school phone, in English or Spanish, even if the database is down or a limit was hit.
 2. Wellbeing concerns get 988 and Childhelp.
 3. Injection attempts, requests for codes and passwords, and questions about other families, children or staff are declined.
 4. One child's own records, billing, custody and staff-conduct concerns are handed to a human.
@@ -128,10 +130,12 @@ Every document is checked at ingest, before it can become searchable, in two lay
 1. **Deterministic detectors.** Some verify with a checksum: card numbers (Luhn) and US routing numbers (ABA). Others match a shape: SSNs, building codes, passwords, API keys, personal phones, emails and addresses. Context detectors hold whole sentences about a named person's health, custody, incidents, background checks, wages, licensing matters or "do not share" plans.
 2. **A Gemini review** for meaning the patterns can't see. It runs once per changed document, so cost scales with content, not traffic.
 
-Held text is masked in the family index until a director decides: **Redact**, **Staff only** or **It's fine**.
+Held text is masked in the family index until a director decides: **Redact**, **Staff only** or **It's fine** (each decision can be undone).
 Records files (payroll, incident reports, custody, contact lists) are kept staff-only whole.
-A final scan runs on every answer before it streams.
-Policy text ("we need a copy of any court order") is never flagged; a named family's situation always is.
+The same check covers calendar events and staff answers published from the Inbox.
+Before anything reaches a parent, a final scan covers every part of the answer: headline, body, facts, steps, events, source excerpts and suggested questions.
+Drafts only stream while retrieval is strong, so a parent never reads text that validation later withdraws.
+Policy text ("bring a court order if there are pickup restrictions") is meant to pass and a named family's situation to be held; both layers are tuned for that, and false positives remain possible.
 
 **Tenancy and security.**
 - Every table has row level security with no policies, so the database is unreadable except to the server.
@@ -158,11 +162,11 @@ Policy text ("we need a copy of any court order") is never flagged; a named fami
 
 | Check | Result |
 | --- | --- |
-| Unit tests (Vitest) | 56 passing: detectors and checksums, chunker, guard router, token crypto, iCal parsing |
-| End-to-end (Playwright, desktop and Pixel 7) | 55 passing: cited answers, event cards, refusals, the 911 path, gap to answer to re-ask, Privacy Guard, rules, conflict resolution, Back closes sheets |
+| Unit tests (Vitest) | 107 passing: detectors and checksums, event screening, hours and closures, follow-ups, guard router (incl. Spanish emergencies), chunker, token crypto, iCal parsing |
+| End-to-end (Playwright, desktop and Pixel 7) | 144 passing (16 run on one device only): cited answers, event cards, refusals, the 911 path, the parent home and chat drawer, gap to answer to the parent's home, Privacy Guard and undo, hours editing, sources, no sideways scroll at 360px |
 | Accessibility | axe WCAG 2.2 AA on every page, light and dark: 0 violations |
-| Evals ([in-house harness](../ai-eval-cafe), 44 cases) | Stub mode: 42/44, all gates pass; adversarial, privacy and safety at 100%. Live mode run with the Gemini key. |
-| CI | Lint, types, unit and build, then e2e, accessibility and evals against a local Supabase, all with $0 AI |
+| Evals ([in-house harness](https://github.com/conraddavisjr/ai-evals-cafe), 62 cases incl. 15 prompt injections) | Live Gemini: 62/62. Stub mode (CI): 60/62, every gate passes. Gates are deterministic: the expected outcome (answer, refuse, 911) and secrets that must never appear. The semantic judge is a free mock, so groundedness is checked by the citation gate rather than by a model judge. |
+| CI | Lint, types, unit and build, then e2e, accessibility and evals against a local Supabase, all with $0 AI; a failed eval gate fails the build |
 
 ## Run it locally
 
@@ -194,6 +198,8 @@ FRONT_DESK_URL=http://localhost:3000 EVAL_SECRET=local pnpm eval:target --config
 - Detectors are tuned for US formats and English names.
   The AI review layer covers more, but neither is a compliance guarantee.
 - Without a key, answers are extractive and the eval run shows two stub misses.
+- The demo sources are real, public Notion pages, Drive files and a Google Calendar, read into the demo when it is seeded; the live Notion and Google OAuth flows are built but not exposed in the demo.
+- The eval judge is a mock; a live model judge for groundedness is the next step for the eval suite.
 
 ## What's next
 
@@ -202,7 +208,10 @@ FRONT_DESK_URL=http://localhost:3000 EVAL_SECRET=local pnpm eval:target --config
 3. **Proactive Spotlight:** "Five families asked about pink eye this week. Send a note to the Puffins room?"
 4. **Multilingual:** answer in the family's language from an English handbook, already partly there with Gemini.
 5. **Scale:** ParadeDB BM25, a reranker, background ingest on queues, and per-tenant rate tiers.
-6. **Quality loop:** turn thumbs-down answers into eval cases automatically.
+6. **Quality loop:** turn thumbs-down answers into eval cases automatically, with a live model judge.
+7. **Slack:** unanswered questions posted to a staff channel with an Answer button, so staff answer where they already work.
+8. **More sources per school:** connect additional Notion workspaces and Drive folders (the OAuth flows exist; the demo shows one of each).
+9. **Broader conflict detection:** prices, durations and policy wording, not only temperatures.
 
 ## Repository map
 

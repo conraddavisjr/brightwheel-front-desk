@@ -50,9 +50,9 @@ $0 by default: the Gemini free tier with a key that has no billing, Supabase fre
 A daily cap bounds usage, and tests, CI and evals run on deterministic stubs.
 
 **How I know it works.**
-- 56 unit tests and 55 Playwright journeys on desktop and phone.
+- 107 unit tests and 144 Playwright journeys on desktop and phone.
 - Zero WCAG 2.2 AA violations in light and dark.
-- A 44-case eval suite in my in-house harness, with adversarial, privacy and safety gated at 100%.
+- A 62-case eval suite in my in-house harness (15 prompt-injection cases), 62/62 on live Gemini, with adversarial, privacy and safety gated at 100% in CI.
 
 **Limitations.**
 - Sign-in is a demo shortcut, and family notifications are simulated.
