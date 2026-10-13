@@ -1,8 +1,9 @@
 import "server-only";
+import { sessionSecret } from "@/lib/sessionSecret";
 
 /**
- * The only module that reads environment variables. Everything else imports
- * `config`, so a missing or misnamed variable shows up in one place.
+ * The only module that reads environment variables (plus lib/sessionSecret.ts, which proxy.ts also
+ * uses). Everything else imports `config`, so a missing or misnamed variable shows up in one place.
  */
 
 function optional(name: string, fallback = ""): string {
@@ -21,7 +22,7 @@ export const config = {
     url: optional("SUPABASE_URL", "http://127.0.0.1:55421"),
     serviceKey: optional("SUPABASE_SERVICE_ROLE_KEY"),
   },
-  sessionSecret: optional("SESSION_SECRET", "local-dev-session-secret-change-me-0123456789"),
+  sessionSecret: sessionSecret(),
   tokenKey: optional("TOKEN_ENCRYPTION_KEY", "local-dev-token-key-change-me-0123456789abcdef"),
 
   ai: {

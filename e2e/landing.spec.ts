@@ -87,3 +87,18 @@ test("landing: each experience card is one link with no underlined text", async 
   await card.getByText(/Ask anything by text, voice or a guided flow/).click();
   await expect(page).toHaveURL(/\/ask$/, { timeout: 10_000 });
 });
+
+test("opening an app page directly steps in as the right person, on that page", async ({ page }) => {
+  await page.goto("/operator/privacy");
+  await expect(page).toHaveURL(/\/operator\/privacy$/);
+  await expect(page.getByRole("heading", { name: "Privacy Guard" })).toBeVisible();
+  // From the director side straight to the parent app: switches sides, same school.
+  await page.goto("/ask");
+  await expect(page).toHaveURL(/\/ask$/);
+  await expect(page.getByRole("heading", { name: /, Maya/ })).toBeVisible();
+});
+
+test("the demo door only redirects within the app", async ({ page }) => {
+  await page.goto("/demo/enter?role=parent&next=https://evil.example/");
+  await expect(page).toHaveURL(/\/$/);
+});
