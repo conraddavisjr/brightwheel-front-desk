@@ -29,9 +29,9 @@ const FILTERS = [
   { id: "unsure", label: "No answer" },
 ] as const;
 
-export function ConversationsView({ threads }: { threads: Thread[] }) {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
-  const [q, setQ] = useState("");
+export function ConversationsView({ threads, initialQuery = "", initialFilter = "all" }: { threads: Thread[]; initialQuery?: string; initialFilter?: (typeof FILTERS)[number]["id"] }) {
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>(initialFilter);
+  const [q, setQ] = useState(initialQuery);
   const [openId, setOpenId] = useState<string | null>(null);
   const list = useMemo(
     () =>

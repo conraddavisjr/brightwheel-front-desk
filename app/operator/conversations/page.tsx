@@ -9,19 +9,20 @@ import { ListSkeleton } from "@/components/operator/ListSkeleton";
 
 export const metadata: Metadata = { title: "Conversations" };
 
-export default function ConversationsPage() {
+export default function ConversationsPage({ searchParams }: PageProps<"/operator/conversations">) {
   return (
     <main className="mx-auto max-w-[1000px] space-y-5 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <PageHeader title="Conversations" subtitle="What families asked, what Front Desk said, and how they rated it. Step in with a personal reply any time." />
       <Suspense fallback={<ListSkeleton rows={8} />}>
-        <Data />
+        <Data searchParams={searchParams} />
       </Suspense>
     </main>
   );
 }
 
-async function Data() {
+async function Data({ searchParams }: { searchParams: PageProps<"/operator/conversations">["searchParams"] }) {
   const s = await getSession();
+  const { q, filter } = await searchParams;
   if (!s || s.role === "parent") redirect("/");
   const [msgs, people] = await Promise.all([recentMessages(s.schoolId, 30), peopleById(s.schoolId)]);
   const byConv = new Map<string, typeof msgs>();
@@ -46,5 +47,5 @@ async function Data() {
     });
   }
   threads.sort((a, b) => Number(b.needsReply) - Number(a.needsReply) || b.lastAt.localeCompare(a.lastAt));
-  return <ConversationsView threads={threads.slice(0, 300)} />;
+  return <ConversationsView threads={threads.slice(0, 300)} initialQuery={typeof q === "string" ? q : ""} initialFilter={filter === "reply" || filter === "down" || filter === "unsure" ? filter : "all"} />;
 }

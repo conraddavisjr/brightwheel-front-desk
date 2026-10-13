@@ -114,7 +114,7 @@ export function UsageChart({ data }: { data: Day[] }) {
                 <g key={d.day} opacity={dim ? 0.45 : 1} style={{ transition: "opacity 160ms" }}>
                   <path d={col(x, aTop, base, d.other === 0)} fill="var(--chart-1)" />
                   {d.other > 0 ? <path d={col(x, oTop, aTop - 2, true)} fill="var(--chart-2)" /> : null}
-                  <rect x={PAD.left + i * band} y={PAD.top} width={band} height={innerH} fill="transparent" onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={-1} />
+                  <rect className="chart-hit" x={PAD.left + i * band} y={PAD.top} width={band} height={innerH} fill="transparent" onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={-1} />
                 </g>
               );
             })}

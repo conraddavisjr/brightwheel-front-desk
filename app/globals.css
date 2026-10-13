@@ -431,6 +431,14 @@
   }
 }
 
+/* The selected column on the usage chart: a lighter outline than the global focus ring (a chart column is narrow). */
+.chart-hit:focus-visible,
+.chart-hit:focus {
+  outline-width: 1.5px;
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
 /* An unread staff reply on the parent's home: a soft, slow glow in the accent. */
 .reply-glow {
   animation: reply-glow 2.8s ease-in-out infinite;

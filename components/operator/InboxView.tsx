@@ -6,6 +6,7 @@ import { CheckCircle2, FileWarning, Loader2, MessageCircleQuestion, Mail, Archiv
 import { Sheet } from "@/components/ui/Sheet";
 import { Pill } from "@/components/ui/Pill";
 import { Avatar } from "@/components/ui/Avatar";
+import { DragScroll } from "@/components/ui/DragScroll";
 import { TOPIC_LABEL } from "@/components/operator/labels";
 import { ago } from "@/lib/time";
 import { useToast } from "@/components/ui/Toast";
@@ -230,13 +231,16 @@ function GapSheet({ gap, onClose }: { gap: GapItem | null; onClose: () => void }
           {gap.askers.length ? (
             <div>
               <p className="text-label font-semibold text-muted">Asked by</p>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {gap.askers.map((a) => (
-                  <li key={a.id} className="inline-flex items-center gap-2 rounded-full bg-surface py-1 pl-1 pr-3 text-label font-medium text-ink ring-1 ring-line-soft">
-                    <Avatar name={a.name} hue={a.hue} size={24} /> {a.name}
-                  </li>
-                ))}
-              </ul>
+              {/* Two rows that scroll sideways (swipe or drag), so a long list of families stays compact. */}
+              <DragScroll label="Families who asked" className="-mx-5 mt-2 px-5 sm:-mx-6 sm:px-6">
+                <ul className="grid w-max grid-flow-col grid-rows-2 gap-2 pb-1">
+                  {gap.askers.map((a) => (
+                    <li key={a.id} className="inline-flex items-center gap-2 whitespace-nowrap rounded-full bg-surface py-1 pl-1 pr-3 text-label font-medium text-ink ring-1 ring-line-soft">
+                      <Avatar name={a.name} hue={a.hue} size={24} /> {a.name}
+                    </li>
+                  ))}
+                </ul>
+              </DragScroll>
             </div>
           ) : null}
 

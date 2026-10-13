@@ -194,3 +194,37 @@ test("hours edited in Knowledge are what families are told", async ({ page, brow
   await sheet.getByRole("button", { name: "Save hours" }).click();
   await expect(page.getByText("Hours updated")).toBeVisible();
 });
+
+test("sources show the real connected workspaces without add or remove controls", async ({ page }) => {
+  await page.goto("/operator/sources");
+  await expect(page.getByText(/Connect another|Use a calendar link/)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Disconnect/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Harbor Kids team space/ })).toHaveAttribute("href", /notion\.(so|site)\//);
+});
+
+test("home: a top question opens its conversations, an unanswered one opens its Inbox item", async ({ page }) => {
+  await page.goto("/operator");
+  const top = page.getByRole("region").filter({ has: page.getByRole("heading", { name: "What families ask most" }) }).or(page.locator("section").filter({ has: page.getByRole("heading", { name: "What families ask most" }) })).first();
+  const first = top.getByRole("link").filter({ hasNotText: "All conversations" }).first();
+  await first.click();
+  await expect(page).toHaveURL(/\/operator\/(conversations\?q=|inbox\?gap=)/);
+});
+
+test("home: most-used sources expand to show everything, then collapse", async ({ page }) => {
+  await page.goto("/operator");
+  const more = page.getByRole("button", { name: "See all" });
+  await more.click();
+  await expect(page.getByText("What families ask about")).toBeVisible();
+  await page.getByRole("button", { name: "See less" }).click();
+  await expect(page.getByText("What families ask about")).toBeHidden();
+});
+
+test("Inbox: families who asked sit in two rows that scroll sideways", async ({ page }) => {
+  await page.goto("/operator/inbox");
+  await page.getByText("Is there parking for drop off?").first().click();
+  const row = page.getByRole("region", { name: "Families who asked" });
+  await expect(row).toBeVisible();
+  const rows = await row.locator("li").evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
+  expect(rows).toBeLessThanOrEqual(2);
+  if (test.info().project.name === "phone") expect(await row.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+});

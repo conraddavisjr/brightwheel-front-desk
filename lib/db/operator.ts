@@ -134,7 +134,7 @@ export async function openGaps(schoolId: string) {
   return must(
     await db()
       .from("gaps")
-      .select("id,question,topic,kind,note,status,ask_count,asker_ids,first_asked_at,last_asked_at,answer,answered_at,notified_at,answer_link")
+      .select("id,question,normalized,topic,kind,note,status,ask_count,asker_ids,first_asked_at,last_asked_at,answer,answered_at,notified_at,answer_link")
       .eq("school_id", schoolId)
       .order("status", { ascending: false })
       .order("last_asked_at", { ascending: false })
@@ -149,6 +149,7 @@ export async function openGaps(schoolId: string) {
     status: "open" | "answered" | "dismissed";
     ask_count: number;
     asker_ids: string[];
+    normalized: string;
     first_asked_at: string;
     last_asked_at: string;
     answer: string | null;

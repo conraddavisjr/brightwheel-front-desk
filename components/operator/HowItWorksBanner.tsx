@@ -66,22 +66,23 @@ export function HowItWorksBanner() {
   return (
     <section aria-label="How Front Desk works" className="rise-in relative overflow-hidden rounded-[24px] bg-surface shadow-2 ring-1 ring-line-soft">
       <div aria-hidden className="absolute inset-0 opacity-70" style={{ background: "radial-gradient(60% 90% at 100% 0%, var(--accent-tint) 0%, transparent 60%), radial-gradient(40% 70% at 0% 100%, var(--pink-tint) 0%, transparent 60%)" }} />
-      <div className="relative grid gap-6 p-5 sm:p-7 md:grid-cols-[1.1fr_1fr] md:items-center">
-        <div>
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-ai-tint px-2.5 py-1 text-caption font-semibold text-ai-ink">
+      {/* Phones: pill, then the animated demo, then the steps and actions (the text column dissolves into the grid). */}
+      <div className="relative grid grid-cols-1 gap-4 p-4 sm:p-7 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-center md:gap-6 [&>*]:min-w-0">
+        <div className="contents md:block">
+          <p className="order-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-ai-tint px-2.5 py-1 text-caption font-semibold text-ai-ink md:order-none">
             <Sparkles className="h-3.5 w-3.5" aria-hidden /> How Front Desk works
           </p>
-          <h2 className="mt-3 text-balance text-[26px] font-bold leading-tight tracking-[-0.02em] text-ink sm:text-[30px]">Answer families instantly, from the docs you already have.</h2>
-          <ol className="mt-4 space-y-2">
+          <h2 className="mt-3 hidden text-balance text-[26px] font-bold leading-tight tracking-[-0.02em] text-ink sm:text-[30px] md:block">Answer families instantly, from the docs you already have.</h2>
+          <ol className="order-3 space-y-1.5 md:order-none md:mt-4 md:space-y-2">
             {STEPS.map((s, i) => (
               <li key={s.title}>
-                <button type="button" onClick={() => { setStep(i); setPaused(true); }} aria-current={step === i ? "step" : undefined} className={`flex w-full gap-3 rounded-[14px] p-2.5 text-left transition ${step === i ? "items-start bg-surface shadow-1 ring-1 ring-line-soft" : "items-center opacity-70 hover:opacity-100"}`}>
+                <button type="button" onClick={() => { setStep(i); setPaused(true); }} aria-current={step === i ? "step" : undefined} className={`flex w-full gap-3 rounded-[14px] p-2.5 text-left transition ${step === i ? "items-center bg-surface shadow-1 ring-1 ring-line-soft md:items-start" : "items-center opacity-70 hover:opacity-100"}`}>
                   <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-caption font-bold ${step === i ? "bg-accent text-on-accent" : "bg-sunken text-muted"}`}>{i + 1}</span>
                   <span>
                     <span className="block text-dense font-semibold text-ink">{s.title}</span>
                     {step === i ? (
                       // Every description sits in the same grid cell, so the slot is always as tall as the longest: no layout shift between steps.
-                      <span className="grid">
+                      <span className="hidden md:grid">
                         {STEPS.map((o, j) => (
                           <span key={o.title} aria-hidden={j !== i} className={`col-start-1 row-start-1 text-dense text-muted ${j === i ? "fade-in" : "invisible"}`}>
                             {o.body}
@@ -94,11 +95,11 @@ export function HowItWorksBanner() {
               </li>
             ))}
           </ol>
-          <div className="mt-5 flex flex-wrap items-center gap-2">
+          <div className="order-4 flex flex-wrap items-center gap-2 md:order-none md:mt-5">
             <Link href="/operator/sources" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-5 text-dense font-semibold text-on-accent shadow-1 hover:bg-accent-hover">
               Connect a source <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
-            <Link href="/operator/inbox" className="inline-flex min-h-11 items-center rounded-full px-4 text-dense font-semibold text-accent hover:bg-accent-tint">
+            <Link href="/operator/inbox" className="hidden min-h-11 items-center rounded-full px-4 text-dense font-semibold text-accent hover:bg-accent-tint md:inline-flex">
               See what families asked
             </Link>
             <button type="button" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Play demo" : "Pause demo"} className="relative ml-auto grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-sunken">
@@ -127,7 +128,9 @@ export function HowItWorksBanner() {
             </button>
           </div>
         </div>
-        <Demo step={step} />
+        <div className="order-2 md:order-none">
+          <Demo step={step} />
+        </div>
       </div>
       <button
         type="button"
@@ -143,7 +146,7 @@ export function HowItWorksBanner() {
 
 function Demo({ step }: { step: number }) {
   return (
-    <div aria-hidden className="relative h-[260px] overflow-hidden rounded-[20px] bg-canvas p-4 ring-1 ring-line-soft">
+    <div aria-hidden className="relative h-[232px] overflow-hidden rounded-[20px] bg-canvas p-3.5 ring-1 ring-line-soft sm:h-[260px] sm:p-4">
       {step === 0 ? (
         <div key="s0" className="space-y-2.5">
           {[

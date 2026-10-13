@@ -126,8 +126,7 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
       {SECTIONS.map((sec) => {
         const mine = sources.filter((s) => s.kind === sec.kind || (sec.kind === "calendar" && s.kind === "ical"));
         // The demo school's Notion is a real, published workspace already; one is enough for the demo.
-        const demoNotion = sec.kind === "notion" && mine.some((s) => s.demo);
-        const can = configured[sec.needs] && !demoNotion;
+        const can = configured[sec.needs];
         return (
           <section key={sec.kind} id={sec.kind} className="scroll-mt-6 rounded-[20px] bg-surface p-4 shadow-1 ring-1 ring-line-soft sm:p-6">
             <div className="flex flex-wrap items-start gap-4">
@@ -136,6 +135,8 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                 <h2 className="text-title-2 font-bold text-ink">{sec.title}</h2>
                 <p className="mt-0.5 max-w-xl text-dense text-muted">{sec.body}</p>
               </div>
+              {/* Connected: the card shows the real workspace; adding another is out of the demo's scope. */}
+              {mine.length ? null : (
               <div className="flex w-full flex-wrap gap-2 sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none">
                 {sec.kind === "calendar" ? (
                   <button type="button" onClick={() => setIcalOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-surface px-4 text-dense font-semibold text-ink ring-1 ring-line hover:bg-sunken">
@@ -148,15 +149,15 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                   onClick={(e) => {
                     if (!can) {
                       e.preventDefault();
-                      if (demoNotion) toast({ tone: "neutral", title: "This school's Notion is already connected", body: "It reads the demo workspace's real pages. Use the link on the source to open them." });
-                      else toast({ tone: "neutral", title: `${sec.title} OAuth isn't configured on this deployment`, body: "See docs/SETUP.md. The demo schools show seeded content in the meantime." });
+                      toast({ tone: "neutral", title: `${sec.title} OAuth isn't configured on this deployment`, body: "See docs/SETUP.md. The demo schools show seeded content in the meantime." });
                     }
                   }}
                   className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-dense font-semibold ${can ? "bg-accent text-on-accent shadow-1 hover:bg-accent-hover" : "bg-sunken text-muted"}`}
                 >
-                  <Plus className="h-4 w-4" aria-hidden /> {mine.length ? `Connect another` : `Connect ${sec.title === "Calendar" ? "Google Calendar" : sec.title}`}
+                  <Plus className="h-4 w-4" aria-hidden /> Connect {sec.title === "Calendar" ? "Google Calendar" : sec.title}
                 </a>
               </div>
+              )}
             </div>
             {mine.length ? (
               <ul className="mt-5 space-y-2.5">
@@ -190,9 +191,12 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                       <button type="button" onClick={() => sync(s)} disabled={busy === s.id} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-surface px-3 text-label font-semibold text-ink ring-1 ring-line hover:bg-sunken disabled:opacity-60">
                         {busy === s.id ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <RefreshCw className="h-4 w-4" aria-hidden />} Sync now
                       </button>
-                      <button type="button" aria-label={`Disconnect ${s.account ?? s.name}`} onClick={() => setConfirmDelete(s)} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-danger-tint hover:text-danger-ink">
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </button>
+                      {/* The seeded demo sources are shared by every reviewer, so they can't be disconnected here. */}
+                      {s.demo || s.link ? null : (
+                        <button type="button" aria-label={`Disconnect ${s.account ?? s.name}`} onClick={() => setConfirmDelete(s)} className="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-danger-tint hover:text-danger-ink">
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}

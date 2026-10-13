@@ -11,6 +11,8 @@ import { HowItWorksBanner } from "@/components/operator/HowItWorksBanner";
 import { UsageChart } from "@/components/operator/UsageChart";
 import { IntegrationTiles } from "@/components/operator/IntegrationTiles";
 import { Pill } from "@/components/ui/Pill";
+import { SourcesUsage } from "@/components/operator/SourcesUsage";
+import { normalizeQuestion } from "@/lib/guard/router";
 import { PageHeader, Panel } from "@/components/operator/Panel";
 import { SchoolLogo } from "@/components/brand/SchoolLogo";
 import { TOPIC_LABEL, OUTCOME_PILL } from "@/components/operator/labels";
@@ -20,9 +22,12 @@ export const metadata: Metadata = { title: "Home" };
 export default function OperatorHome() {
   return (
     <main className="mx-auto max-w-[1180px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <Suspense fallback={<div className="shimmer h-16 w-80 rounded-[16px]" />}>
-        <Greeting />
-      </Suspense>
+      {/* Phones have the school's logo and name in the header already; vertical space goes to the work. */}
+      <div className="hidden lg:block">
+        <Suspense fallback={<div className="shimmer h-16 w-80 rounded-[16px]" />}>
+          <Greeting />
+        </Suspense>
+      </div>
       <HowItWorksBanner />
       <Suspense fallback={<HomeSkeleton />}>
         <Dashboard />
@@ -121,46 +126,31 @@ async function Dashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Panel title="What families ask most" action={<Link href="/operator/conversations" className="text-label font-semibold text-accent hover:underline">All conversations</Link>}>
           <ol className="divide-y divide-line-soft">
-            {st.topQuestions.map((q, i) => (
-              <li key={q.question} className="flex items-center gap-3 py-2.5">
-                <span className="tabular w-5 text-caption font-bold text-muted">{i + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-dense font-medium text-ink">{q.question}</p>
-                  <p className="text-caption text-muted">{TOPIC_LABEL[q.topic] ?? q.topic}</p>
-                </div>
-                <Pill tone={OUTCOME_PILL[q.outcome]?.tone ?? "neutral"}>{OUTCOME_PILL[q.outcome]?.label ?? q.outcome}</Pill>
-                <span className="tabular w-8 text-right text-dense font-semibold text-ink">{q.count}</span>
-              </li>
-            ))}
-          </ol>
-        </Panel>
-        <Panel title="Most-used sources" subtitle="The documents doing the most work for you.">
-          <ul className="space-y-3">
-            {st.topSources.length === 0 ? <li className="text-dense text-muted">Sources appear here as families ask questions.</li> : null}
-            {st.topSources.map((src) => {
-              const max = st.topSources[0].count;
+            {st.topQuestions.map((q, i) => {
+              // Unanswered: straight to its Inbox item to answer it. Otherwise: those conversations.
+              const gap = q.outcome === "unsure" ? open.find((g) => g.kind === "question" && g.normalized === normalizeQuestion(q.question)) : undefined;
+              const href = gap ? `/operator/inbox?gap=${gap.id}` : `/operator/conversations?q=${encodeURIComponent(q.question)}${q.outcome === "unsure" ? "&filter=unsure" : ""}`;
               return (
-                <li key={src.documentId}>
-                  <div className="flex items-center justify-between gap-3 text-dense">
-                    <Link href={`/operator/knowledge?doc=${src.documentId}`} className="truncate font-medium text-ink hover:text-accent">
-                      {src.title}
-                    </Link>
-                    <span className="tabular text-muted">{src.count}</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 rounded-full bg-sunken">
-                    <div className="h-1.5 rounded-full" style={{ width: `${(src.count / max) * 100}%`, background: "var(--chart-1)" }} />
-                  </div>
+                <li key={q.question}>
+                  <Link href={href} className="-mx-2 flex items-center gap-3 rounded-[12px] px-2 py-2.5 transition hover:bg-sunken">
+                    <span className="tabular w-5 text-caption font-bold text-muted">{i + 1}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="line-clamp-2 text-dense font-medium text-ink">{q.question}</span>
+                      <span className="text-caption text-muted">{TOPIC_LABEL[q.topic] ?? q.topic}</span>
+                    </span>
+                    <Pill tone={OUTCOME_PILL[q.outcome]?.tone ?? "neutral"}>{OUTCOME_PILL[q.outcome]?.label ?? q.outcome}</Pill>
+                    <span className="tabular w-8 text-right text-dense font-semibold text-ink">{q.count}</span>
+                  </Link>
                 </li>
               );
             })}
-          </ul>
-          <div className="mt-5 flex flex-wrap gap-1.5">
-            {st.topics.slice(0, 8).map((t) => (
-              <span key={t.topic} className="rounded-full bg-sunken px-2.5 py-1 text-caption font-medium text-muted">
-                {TOPIC_LABEL[t.topic] ?? t.topic} <span className="tabular font-semibold text-ink">{t.count}</span>
-              </span>
-            ))}
-          </div>
+          </ol>
+        </Panel>
+        <Panel title="Most-used sources" subtitle="The documents doing the most work for you.">
+          <SourcesUsage
+            sources={st.topSources.map((src) => ({ key: src.documentId, label: src.title, count: src.count, href: `/operator/knowledge?doc=${src.documentId}` }))}
+            topics={st.topics.slice(0, 8).map((t) => ({ key: t.topic, label: TOPIC_LABEL[t.topic] ?? t.topic, count: t.count }))}
+          />
         </Panel>
       </div>
 
