@@ -135,8 +135,14 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                 <h2 className="text-title-2 font-bold text-ink">{sec.title}</h2>
                 <p className="mt-0.5 max-w-xl text-dense text-muted">{sec.body}</p>
               </div>
-              {/* Connected: the card shows the real workspace; adding another is out of the demo's scope. */}
-              {mine.length ? null : (
+              {/* Connected: a success badge, not a button (the card below links to the real workspace). */}
+              {mine.length ? (
+                <span className="inline-flex min-h-11 items-center gap-2 rounded-full bg-success-tint px-4 text-dense font-semibold text-success-ink">
+                  <CheckCircle2 className="h-5 w-5" aria-hidden /> Connected
+                </span>
+              ) : !can ? (
+                <span className="inline-flex min-h-11 items-center rounded-full px-4 text-dense font-medium text-muted ring-1 ring-line-soft">Not connected</span>
+              ) : (
               <div className="flex w-full flex-wrap gap-2 sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none">
                 {sec.kind === "calendar" ? (
                   <button type="button" onClick={() => setIcalOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-surface px-4 text-dense font-semibold text-ink ring-1 ring-line hover:bg-sunken">
@@ -174,7 +180,7 @@ export function SourcesView({ sources, flash, configured }: { sources: SourceCar
                         ) : (
                           (s.account ?? s.name)
                         )}
-                        {s.status === "error" ? <Pill tone="danger">Needs attention</Pill> : s.status === "syncing" ? <Pill tone="info">Syncing</Pill> : <Pill tone="success">Connected</Pill>}
+                        {s.status === "error" ? <Pill tone="danger">Needs attention</Pill> : s.status === "syncing" ? <Pill tone="info">Syncing</Pill> : null}
                         {s.demo ? <Pill tone="neutral" dot={false}>Demo data</Pill> : null}
                       </p>
                       <p className="mt-0.5 text-caption text-muted">

@@ -109,9 +109,19 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
       tone: "success",
       title: action === "redact" ? "Redacted. Your redaction list is updated." : action === "staff_only" ? "Kept for staff only" : "Marked fine to share",
       body: action === "dismiss" ? "Families can now get answers that include it." : "Front Desk will never include it in a family answer.",
+      action: { label: "Undo", onClick: () => void undo(ids) },
     });
     router.refresh();
   }
+  // Put decisions back in the queue (a mis-tap, or "Redact all" on a shared demo).
+  async function undo(ids: string[]) {
+    const res = await fetch(`/api/operator/findings/${ids.length > 1 ? "bulk" : ids[0]}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "undo", ids }) });
+    if (!res.ok) return toast({ tone: "danger", title: "Couldn't undo that. Try again." });
+    setGone((g) => new Set([...g].filter((id) => !ids.includes(id))));
+    toast({ tone: "neutral", title: ids.length > 1 ? `${ids.length} items are back in review` : "Back in review" });
+    router.refresh();
+  }
+
   async function decideDoc(id: string, visibility: "family" | "staff") {
     setBusy(id);
     const res = await fetch(`/api/operator/documents/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ visibility }) });
@@ -262,7 +272,7 @@ export function PrivacyView({ held, quarantined, rules, log, protectedCount }: {
       {tab === "rules" ? (
         <div className="space-y-3">
           <button type="button" onClick={() => setAdding(true)} className="flex w-full items-center gap-3 rounded-[16px] border-2 border-dashed border-line bg-surface/60 p-4 text-left transition hover:border-accent hover:bg-accent-tint-2">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-on-accent">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-on-accent">
               <Plus className="h-5 w-5" aria-hidden />
             </span>
             <span>

@@ -15,7 +15,10 @@ test("home shows the numbers that matter", async ({ page }) => {
 
 test("Privacy Guard holds codes found in a messy page, and a decision sticks", async ({ page }) => {
   await page.goto("/operator/privacy");
-  const item = page.locator("article").filter({ hasText: "alarm code is 2580" }).first();
+  // Each device decides on a different item (the demo's review queue is shared). Cards are told apart
+  // by their category label, since a card's context can quote a neighbouring secret.
+  const label = test.info().project.name === "desktop" ? "Building security" : "Personal identifiers";
+  const item = page.locator("article").filter({ hasText: label }).first();
   await expect(item).toBeVisible();
   await item.getByRole("button", { name: "Redact" }).click();
   await expect(page.getByText(/redaction list is updated/)).toBeVisible();
@@ -198,6 +201,9 @@ test("hours edited in Knowledge are what families are told", async ({ page, brow
 test("sources show the real connected workspaces without add or remove controls", async ({ page }) => {
   await page.goto("/operator/sources");
   await expect(page.getByText(/Connect another|Use a calendar link/)).toHaveCount(0);
+  // Each connected tool shows a success badge, not a button.
+  for (const id of ["notion", "drive", "calendar"]) await expect(page.locator(`section#${id}`).getByText("Connected", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Connect (Notion|Google Drive|Google Calendar)$/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^Disconnect/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Harbor Kids team space/ })).toHaveAttribute("href", /notion\.(so|site)\//);
 });
@@ -227,4 +233,16 @@ test("Inbox: families who asked sit in two rows that scroll sideways", async ({ 
   const rows = await row.locator("li").evaluateAll((els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
   expect(rows).toBeLessThanOrEqual(2);
   if (test.info().project.name === "phone") expect(await row.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+});
+
+test("a Privacy Guard decision can be undone from its confirmation", async ({ page }) => {
+  test.skip(test.info().project.name !== "desktop", "changes shared review state; runs once");
+  await page.goto("/operator/privacy");
+  const cards = page.locator("article").filter({ hasText: "Password or secret" });
+  await expect(cards).toHaveCount(1);
+  await cards.getByRole("button", { name: "Redact" }).click();
+  await expect(cards).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByText("Back in review")).toBeVisible();
+  await expect(cards).toHaveCount(1);
 });

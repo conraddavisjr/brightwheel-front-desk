@@ -3,8 +3,9 @@ import { db, must } from "@/lib/db/client";
 import { reindexDocument, schoolPrivacyContext } from "@/lib/ingest/ingest";
 import { detect } from "@/lib/privacy/detect";
 
-export type ReviewAction = "redact" | "staff_only" | "dismiss";
-const STATUS: Record<ReviewAction, string> = { redact: "redacted", staff_only: "staff_only", dismiss: "dismissed" };
+export type ReviewAction = "redact" | "staff_only" | "dismiss" | "undo";
+// "undo" puts a decision back in the review queue (held), e.g. right after a mis-tap.
+const STATUS: Record<ReviewAction, string> = { redact: "redacted", staff_only: "staff_only", dismiss: "dismissed", undo: "held" };
 
 /**
  * Apply a director's decision to findings and re-index the affected
@@ -19,7 +20,7 @@ export async function reviewFindings(schoolId: string, personId: string, ids: st
   if (mine.length === 0) return 0;
   await db()
     .from("findings")
-    .update({ status: STATUS[action], resolved_by: personId, resolved_at: new Date().toISOString() })
+    .update(action === "undo" ? { status: STATUS[action], resolved_by: null, resolved_at: null } : { status: STATUS[action], resolved_by: personId, resolved_at: new Date().toISOString() })
     .in("id", mine.map((r) => r.id));
   for (const docId of new Set(mine.map((r) => r.document_id))) await reindexDocument(docId);
   return mine.length;

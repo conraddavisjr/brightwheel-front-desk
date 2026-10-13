@@ -3,7 +3,7 @@ import { requireStaff } from "@/lib/operator/auth";
 import { reviewFindings } from "@/lib/privacy/review";
 import { audit } from "@/lib/operator/manualSource";
 
-const Body = z.object({ action: z.enum(["redact", "staff_only", "dismiss"]), ids: z.array(z.string().uuid()).max(500).optional() });
+const Body = z.object({ action: z.enum(["redact", "staff_only", "dismiss", "undo"]), ids: z.array(z.string().uuid()).max(500).optional() });
 
 /** Review one finding (or several, when the id is "bulk" and ids are passed). */
 export async function POST(req: Request, ctx: RouteContext<"/api/operator/findings/[id]">) {

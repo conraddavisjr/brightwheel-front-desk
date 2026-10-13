@@ -10,8 +10,8 @@ interface Toast {
   tone: Tone;
   title: string;
   body?: string;
-  /** Optional link, e.g. to open what was just created. */
-  action?: { label: string; href: string };
+  /** Optional follow-up: a link (open what was just created) or a button (undo). */
+  action?: { label: string; href: string } | { label: string; onClick: () => void };
 }
 type Push = (t: Omit<Toast, "id">) => void;
 
@@ -41,10 +41,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div className="min-w-0 flex-1">
               <p className="text-dense font-semibold text-ink">{t.title}</p>
               {t.body ? <p className="mt-0.5 text-caption text-muted">{t.body}</p> : null}
-              {t.action ? (
+              {t.action && "href" in t.action ? (
                 <Link href={t.action.href} onClick={() => dismiss(t.id)} className="mt-1.5 inline-flex min-h-8 items-center gap-1 rounded-full text-label font-semibold text-accent hover:underline">
                   {t.action.label} <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
+              ) : t.action ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const run = (t.action as { onClick: () => void }).onClick;
+                    dismiss(t.id);
+                    run();
+                  }}
+                  className="mt-1.5 inline-flex min-h-8 items-center rounded-full text-label font-semibold text-accent hover:underline"
+                >
+                  {t.action.label}
+                </button>
               ) : null}
             </div>
             <button type="button" aria-label="Dismiss" onClick={() => dismiss(t.id)} className="-m-1 grid h-8 w-8 place-items-center rounded-full text-muted hover:bg-sunken">
