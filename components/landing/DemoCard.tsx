@@ -39,10 +39,13 @@ export function DemoCard({
       href={`/demo/enter?school=${school}&role=${role}`}
       onClick={() => setPending(true)}
       aria-busy={pending || undefined}
-      className="group flex flex-col rounded-[28px] bg-surface p-5 text-ink no-underline shadow-2 ring-1 ring-line-soft transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-3 focus-visible:ring-2 focus-visible:ring-accent sm:p-7"
+      className="group flex flex-col rounded-[28px] bg-surface p-5 text-ink no-underline shadow-2 ring-1 ring-line-soft transition-shadow duration-200 hover:shadow-3 focus-visible:ring-2 focus-visible:ring-accent sm:p-7"
     >
       {children}
-      <span className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent px-5 text-[15px] font-semibold text-on-accent shadow-1 transition-colors group-hover:bg-accent-hover">
+      {/* Brand navy rather than blurple, so the button doesn't compete with the blurple in the previews above. */}
+      {/* Pinned to the bottom, so the two cards' buttons line up whatever the preview's height. */}
+      <span className="mt-auto pt-5" aria-hidden />
+      <span className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-ink px-5 text-[15px] font-semibold text-surface shadow-1 transition-opacity group-hover:opacity-90">
         {cta}
         {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />}
       </span>

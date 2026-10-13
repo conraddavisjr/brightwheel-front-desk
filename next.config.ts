@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
-  experimental: { useOffline: true },
+  // Revisiting a page within a minute shows it instantly (actions call router.refresh, which clears this).
+  experimental: { useOffline: true, staleTimes: { dynamic: 60 } },
   poweredByHeader: false,
   async headers() {
     return [

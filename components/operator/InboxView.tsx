@@ -7,6 +7,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { Pill } from "@/components/ui/Pill";
 import { Avatar } from "@/components/ui/Avatar";
 import { DragScroll } from "@/components/ui/DragScroll";
+import { MatchCarousel } from "@/components/operator/MatchCarousel";
 import { TOPIC_LABEL } from "@/components/operator/labels";
 import { ago } from "@/lib/time";
 import { useToast } from "@/components/ui/Toast";
@@ -253,17 +254,9 @@ function GapSheet({ gap, onClose }: { gap: GapItem | null; onClose: () => void }
             ) : related.length === 0 ? (
               <p className="mt-2 text-dense text-muted">Nothing related. This is new information for Front Desk.</p>
             ) : (
-              <ul className="mt-2 space-y-2">
-                {related.slice(0, 2).map((r) => (
-                  <li key={r.documentId + r.heading} className="rounded-[12px] bg-sunken p-3">
-                    <p className="flex items-center gap-1.5 text-caption font-semibold text-ink">
-                      <FileText className="h-3.5 w-3.5 text-accent" aria-hidden /> {r.title}
-                      {r.heading ? <span className="font-normal text-muted"> › {r.heading}</span> : null}
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-caption text-muted">{r.excerpt}</p>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-2">
+                <MatchCarousel matches={related.slice(0, 4)} />
+              </div>
             )}
             <p className="mt-2 text-caption text-muted">Front Desk didn&apos;t treat these as an answer. We never draft policy for you; your words become the source.</p>
           </div>

@@ -10,6 +10,7 @@ import { Wordmark } from "@/components/brand/WheelMark";
 import { SchoolLogo } from "@/components/brand/SchoolLogo";
 import { Avatar } from "@/components/ui/Avatar";
 import { ViewAsParent } from "@/components/operator/ViewAsParent";
+import { SwipeNav } from "@/components/operator/SwipeNav";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function OperatorLayout({ children }: LayoutProps<"/operator">) {
@@ -37,6 +38,7 @@ export default function OperatorLayout({ children }: LayoutProps<"/operator">) {
       <Suspense fallback={<TabBar counts={null} />}>
         <TabBarWithCounts />
       </Suspense>
+      <SwipeNav />
     </div>
   );
 }

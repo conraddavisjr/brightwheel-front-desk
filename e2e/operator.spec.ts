@@ -21,7 +21,8 @@ test("Privacy Guard holds codes found in a messy page, and a decision sticks", a
   const item = page.locator("article").filter({ hasText: label }).first();
   await expect(item).toBeVisible();
   await item.getByRole("button", { name: "Redact" }).click();
-  await expect(page.getByText(/redaction list is updated/)).toBeVisible();
+  // Redacting re-indexes the document before confirming.
+  await expect(page.getByText(/redaction list is updated/)).toBeVisible({ timeout: 15_000 });
 });
 
 test("payroll and incident reports stay staff-only", async ({ page }) => {
@@ -245,4 +246,36 @@ test("a Privacy Guard decision can be undone from its confirmation", async ({ pa
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByText("Back in review")).toBeVisible();
   await expect(cards).toHaveCount(1);
+});
+
+test("phone: swiping moves between sections, but not from the screen edge", async ({ page }) => {
+  test.skip(test.info().project.name !== "phone", "touch gesture");
+  await page.goto("/operator/privacy");
+  await page.waitForLoadState("networkidle");
+  const swipe = (fromX: number, toX: number) =>
+    page.evaluate(
+      ([a, b]) => {
+        const target = document.querySelector("main") ?? document.body;
+        const touch = (x: number) => new Touch({ identifier: 1, target, clientX: x, clientY: 420 });
+        target.dispatchEvent(new TouchEvent("touchstart", { touches: [touch(a)], changedTouches: [touch(a)], bubbles: true }));
+        target.dispatchEvent(new TouchEvent("touchend", { touches: [], changedTouches: [touch(b)], bubbles: true }));
+      },
+      [fromX, toX],
+    );
+  await swipe(10, 300); // starts at the edge: the browser's own back gesture, not ours
+  await page.waitForTimeout(500);
+  await expect(page).toHaveURL(/\/operator\/privacy$/);
+  await swipe(300, 80); // left: next section
+  await expect(page).toHaveURL(/\/operator\/sources$/);
+  await swipe(80, 300); // right: previous section
+  await expect(page).toHaveURL(/\/operator\/privacy$/);
+});
+
+test("Inbox: the closest passages are short swipeable cards that open the document", async ({ page }) => {
+  await page.goto("/operator/inbox");
+  await page.getByText("Is there parking for drop off?").first().click();
+  const cards = page.getByRole("list", { name: "Closest passages" }).getByRole("link");
+  await expect(cards.first()).toHaveAttribute("href", /\/operator\/knowledge\?doc=/);
+  await cards.first().click();
+  await expect(page).toHaveURL(/\/operator\/knowledge\?doc=/);
 });
